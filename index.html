@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#121212">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>NS Gym Tracker</title>
+  <title>Gym Tracker</title>
   <style>
     :root {
       --bg: #121212;
@@ -25,10 +25,9 @@
 
     header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--card-border); padding-bottom: 12px; }
     h1 { font-size: 1.4rem; color: var(--accent); font-weight: 700; }
-    .cycle-badge { background: #2c2c2c; color: var(--accent); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
 
-    .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 4px; }
-    .tab-btn { flex: 1; background: var(--card); border: 1px solid var(--card-border); color: var(--text-dim); padding: 10px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; text-align: center; }
+    .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .tab-btn { flex: 1; background: var(--card); border: 1px solid var(--card-border); color: var(--text-dim); padding: 10px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; text-align: center; }
     .tab-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
 
     .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
@@ -42,7 +41,8 @@
     .btn { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; font-size: 0.95rem; margin-top: 8px; }
     .btn:active { opacity: 0.8; }
     .btn-secondary { background: #2a2a2a; color: var(--text-dim); border: 1px solid var(--card-border); margin-top: 4px; }
-    .btn-del { background: transparent; color: var(--danger); font-size: 1.2rem; border: none; height: 36px; }
+    .btn-del { background: transparent; color: var(--danger); font-size: 1.2rem; border: none; height: 36px; cursor: pointer; }
+    .btn-delete-log { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
 
     /* Timer Bar */
     .timer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1f1f1f; border-top: 1px solid var(--card-border); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
@@ -57,19 +57,16 @@
 <body>
 
   <header>
-    <h1>NS GYM TRACKER</h1>
-    <span class="cycle-badge" id="cycleDisplay">3-Day Split</span>
+    <h1>GYM TRACKER</h1>
   </header>
 
-  <!-- Workout Selection Tabs -->
+  <!-- Navigation Tabs -->
   <div class="nav-tabs">
-    <button class="tab-btn active" onclick="switchTab('upper')">Upper</button>
-    <button class="tab-btn" onclick="switchTab('lower')">Lower</button>
-    <button class="tab-btn" onclick="switchTab('arms')">Shoulders/Arms</button>
+    <button class="tab-btn active" onclick="switchTab('workout')">Today's Workout</button>
     <button class="tab-btn" onclick="switchTab('history')">History</button>
   </div>
 
-  <!-- Dynamic Workout Form -->
+  <!-- Dynamic Content Container -->
   <div id="workoutContainer"></div>
 
   <!-- Bottom Rest Timer Bar -->
@@ -86,20 +83,16 @@
   </div>
 
   <script>
-    // Initial Default Routines
-    const defaultRoutines = {
-      upper: ["Bench Press", "Barbell Row", "Incline Dumbbell Press", "Lat Pulldown"],
-      lower: ["Barbell Squat", "Romanian Deadlift", "Leg Extension", "Leg Curl", "Calf Raise"],
-      arms: ["Overhead Shoulder Press", "Lateral Raise", "Barbell Bicep Curl", "Tricep Rope Pushdown"]
-    };
+    // Initial Default Single-Day Routine
+    const defaultExercises = ["Bench Press", "Barbell Squat", "Barbell Row", "Overhead Press"];
 
-    let currentTab = 'upper';
+    let currentTab = 'workout';
     let timerInterval = null;
 
     // Load Routine state
-    function getRoutines() {
-      const saved = localStorage.getItem('ns_routines');
-      return saved ? JSON.parse(saved) : defaultRoutines;
+    function getExercises() {
+      const saved = localStorage.getItem('gt_single_routine');
+      return saved ? JSON.parse(saved) : defaultExercises;
     }
 
     function switchTab(tab) {
@@ -118,8 +111,7 @@
         return;
       }
 
-      const routines = getRoutines();
-      const exercises = routines[currentTab] || [];
+      const exercises = getExercises();
 
       let html = `<form id="workoutForm" onsubmit="saveWorkout(event)">`;
       
@@ -128,7 +120,7 @@
           <div class="card">
             <div class="card-title">
               <span>${ex}</span>
-              <button type="button" class="btn-del" onclick="removeExercise('${currentTab}', ${exIndex})">✕</button>
+              <button type="button" class="btn-del" onclick="removeExercise(${exIndex})">✕</button>
             </div>
             <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:8px; margin-bottom:6px; font-size:0.75rem; color:var(--text-dim);">
               <span>Exercise / Set</span><span>Kg</span><span>Reps</span>
@@ -153,27 +145,27 @@
       });
 
       html += `
-        <button type="button" class="btn btn-secondary" onclick="addExercise('${currentTab}')">+ Add Exercise</button>
+        <button type="button" class="btn btn-secondary" onclick="addExercise()">+ Add Exercise</button>
         <button type="submit" class="btn" style="margin-top:16px;">Finish & Save Workout</button>
       </form>`;
 
       container.innerHTML = html;
     }
 
-    function addExercise(tab) {
+    function addExercise() {
       const name = prompt("Enter Exercise Name:");
       if (!name) return;
-      const routines = getRoutines();
-      routines[tab].push(name);
-      localStorage.setItem('ns_routines', JSON.stringify(routines));
+      const exercises = getExercises();
+      exercises.push(name);
+      localStorage.setItem('gt_single_routine', JSON.stringify(exercises));
       render();
     }
 
-    function removeExercise(tab, index) {
-      if (!confirm("Remove this exercise?")) return;
-      const routines = getRoutines();
-      routines[tab].splice(index, 1);
-      localStorage.setItem('ns_routines', JSON.stringify(routines));
+    function removeExercise(index) {
+      if (!confirm("Remove this exercise from your template?")) return;
+      const exercises = getExercises();
+      exercises.splice(index, 1);
+      localStorage.setItem('gt_single_routine', JSON.stringify(exercises));
       render();
     }
 
@@ -183,12 +175,11 @@
       const log = {
         id: Date.now(),
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        session: currentTab.toUpperCase(),
         entries: []
       };
 
-      const routines = getRoutines()[currentTab];
-      routines.forEach(ex => {
+      const exercises = getExercises();
+      exercises.forEach(ex => {
         const sets = [];
         for (let i = 1; i <= 3; i++) {
           const w = formData.get(`${ex}_w${i}`);
@@ -211,6 +202,14 @@
       switchTab('history');
     }
 
+    function deleteHistoryItem(id) {
+      if (!confirm("Are you sure you want to delete this workout entry?")) return;
+      let history = JSON.parse(localStorage.getItem('ns_history') || '[]');
+      history = history.filter(item => item.id !== id);
+      localStorage.setItem('ns_history', JSON.stringify(history));
+      renderHistory(document.getElementById('workoutContainer'));
+    }
+
     function renderHistory(container) {
       const history = JSON.parse(localStorage.getItem('ns_history') || '[]');
       if (history.length === 0) {
@@ -223,8 +222,11 @@
         html += `
           <div class="card">
             <div class="card-title">
-              <span>${item.session} SESSION</span>
-              <span class="history-date">${item.date}</span>
+              <div>
+                <span>WORKOUT SESSION</span>
+                <div class="history-date">${item.date}</div>
+              </div>
+              <button class="btn-delete-log" onclick="deleteHistoryItem(${item.id})">Delete</button>
             </div>`;
         item.entries.forEach(entry => {
           const setStr = entry.sets.map(s => `${s.weight}kg × ${s.reps}`).join(' | ');
