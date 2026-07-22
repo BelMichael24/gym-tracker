@@ -1,4 +1,4 @@
-<!<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -61,9 +61,19 @@
     .cal-day.selected { border-color: #fff !important; }
 
     /* Timer Bar */
-    .timer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1f1f1f; border-top: 1px solid var(--card-border); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
-    .timer-display { font-size: 1.2rem; font-weight: bold; color: var(--success); font-mono: monospace; }
+    .timer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1f1f1f; border-top: 1px solid var(--card-border); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+    .timer-display { font-size: 1.2rem; font-weight: bold; color: var(--success); font-family: monospace; }
     .timer-btn { background: var(--card-border); color: var(--text); border: none; padding: 8px 14px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; }
+    
+    /* Alarm Active State */
+    .timer-bar.alarm-active { background: #b00020; animation: pulse 0.8s infinite alternate; }
+    .timer-bar.alarm-active .timer-display { color: #fff; }
+    .btn-stop-alarm { background: #fff; color: #b00020; font-weight: bold; padding: 8px 16px; border-radius: 6px; border: none; font-size: 0.9rem; cursor: pointer; }
+
+    @keyframes pulse {
+      from { background: #b00020; }
+      to { background: #cf6679; }
+    }
 
     .history-item { border-bottom: 1px solid var(--card-border); padding: 10px 0; }
     .history-item:last-child { border-bottom: none; }
@@ -87,12 +97,12 @@
   <div id="workoutContainer"></div>
 
   <!-- Bottom Rest Timer Bar -->
-  <div class="timer-bar">
+  <div class="timer-bar" id="timerBar">
     <div>
-      <span style="font-size:0.75rem; color:var(--text-dim); display:block;">REST TIMER</span>
+      <span style="font-size:0.75rem; color:var(--text-dim); display:block;" id="timerLabel">REST TIMER</span>
       <span class="timer-display" id="timerText">01:30</span>
     </div>
-    <div style="display:flex; gap:8px;">
+    <div style="display:flex; gap:8px;" id="timerControls">
       <button class="timer-btn" onclick="startTimer(60)">60s</button>
       <button class="timer-btn" onclick="startTimer(90)">90s</button>
       <button class="timer-btn" onclick="resetTimer()">Stop</button>
@@ -104,6 +114,8 @@
 
     let currentTab = 'workout';
     let timerInterval = null;
+    let alarmBeepInterval = null;
+    let audioCtx = null;
     let calDate = new Date();
     let selectedCalDateStr = null;
 
@@ -138,7 +150,6 @@
 
       let html = `<form id="workoutForm" onsubmit="saveWorkout(event)">`;
       
-      // Date Picker Card to log past workouts
       html += `
         <div class="card date-picker-card">
           <label for="workoutDate">Workout Date:</label>
@@ -352,8 +363,81 @@
       container.innerHTML = html;
     }
 
+    /* --- ALARM SOUND & TIMER LOGIC --- */
+    function playBeep() {
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Pitch A5
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.2); // 200ms beep length
+      } catch (e) {
+        console.log("Audio play prevented:", e);
+      }
+    }
+
+    function triggerAlarm() {
+      // Repeat vibration pattern: 300ms rumble, 200ms pause
+      if (navigator.vibrate) {
+        navigator.vibrate([300, 200, 300, 200, 300, 200, 300, 200, 300]);
+      }
+
+      // Play audio beeps every 600ms
+      playBeep();
+      alarmBeepInterval = setInterval(() => {
+        playBeep();
+        if (navigator.vibrate) navigator.vibrate([300, 200]);
+      }, 600);
+
+      // UI changes for Alarm state
+      const timerBar = document.getElementById('timerBar');
+      const timerLabel = document.getElementById('timerLabel');
+      const timerText = document.getElementById('timerText');
+      const timerControls = document.getElementById('timerControls');
+
+      timerBar.classList.add('alarm-active');
+      timerLabel.innerText = "REST FINISHED!";
+      timerText.innerText = "00:00";
+      timerControls.innerHTML = `<button class="btn-stop-alarm" onclick="stopAlarm()">STOP ALARM</button>`;
+    }
+
+    function stopAlarm() {
+      if (alarmBeepInterval) clearInterval(alarmBeepInterval);
+      if (navigator.vibrate) navigator.vibrate(0); // Stop vibration immediately
+
+      const timerBar = document.getElementById('timerBar');
+      const timerLabel = document.getElementById('timerLabel');
+      const timerControls = document.getElementById('timerControls');
+
+      timerBar.classList.remove('alarm-active');
+      timerLabel.innerText = "REST TIMER";
+      timerControls.innerHTML = `
+        <button class="timer-btn" onclick="startTimer(60)">60s</button>
+        <button class="timer-btn" onclick="startTimer(90)">90s</button>
+        <button class="timer-btn" onclick="resetTimer()">Stop</button>
+      `;
+      resetTimer();
+    }
+
     function startTimer(seconds) {
+      stopAlarm();
       clearInterval(timerInterval);
+
+      // Init audio context on user interaction tap so mobile browser allows sound later
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
       let timeLeft = seconds;
       updateTimerDisplay(timeLeft);
 
@@ -362,13 +446,19 @@
         updateTimerDisplay(timeLeft);
         if (timeLeft <= 0) {
           clearInterval(timerInterval);
-          if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+          triggerAlarm();
         }
       }, 1000);
     }
 
     function resetTimer() {
       clearInterval(timerInterval);
+      if (alarmBeepInterval) clearInterval(alarmBeepInterval);
+      if (navigator.vibrate) navigator.vibrate(0);
+      
+      const timerBar = document.getElementById('timerBar');
+      if (timerBar) timerBar.classList.remove('alarm-active');
+      
       updateTimerDisplay(90);
     }
 
