@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#121212">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
   <title>Gym Tracker</title>
   <style>
     :root {
@@ -26,13 +27,17 @@
     header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--card-border); padding-bottom: 12px; }
     h1 { font-size: 1.4rem; color: var(--accent); font-weight: 700; }
 
-    .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
-    .tab-btn { flex: 1; background: var(--card); border: 1px solid var(--card-border); color: var(--text-dim); padding: 10px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; text-align: center; }
+    .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; }
+    .tab-btn { flex: 1; background: var(--card); border: 1px solid var(--card-border); color: var(--text-dim); padding: 10px 4px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; text-align: center; white-space: nowrap; }
     .tab-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
 
     .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
     .card-title { font-size: 1.1rem; margin-bottom: 12px; color: var(--text); display: flex; justify-content: space-between; align-items: center; }
     
+    .date-picker-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .date-picker-card label { font-size: 0.9rem; color: var(--accent); font-weight: 600; }
+    .date-picker-card input[type="date"] { background: #2a2a2a; border: 1px solid var(--card-border); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; text-align: center; width: auto; color-scheme: dark; }
+
     .set-row { display: grid; grid-template-columns: 2fr 1fr 1fr 40px; gap: 8px; align-items: center; margin-bottom: 8px; }
     input { background: #2a2a2a; border: 1px solid var(--card-border); color: #fff; padding: 8px; border-radius: 6px; font-size: 0.9rem; width: 100%; text-align: center; }
     input[type="text"] { text-align: left; }
@@ -43,6 +48,17 @@
     .btn-secondary { background: #2a2a2a; color: var(--text-dim); border: 1px solid var(--card-border); margin-top: 4px; }
     .btn-del { background: transparent; color: var(--danger); font-size: 1.2rem; border: none; height: 36px; cursor: pointer; }
     .btn-delete-log { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+
+    /* Calendar Styling */
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .cal-header button { background: #2a2a2a; border: 1px solid var(--card-border); color: var(--text); padding: 6px 12px; border-radius: 6px; font-weight: bold; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
+    .cal-day-label { font-size: 0.75rem; color: var(--text-dim); font-weight: bold; padding-bottom: 4px; }
+    .cal-day { background: #2a2a2a; border-radius: 8px; padding: 10px 0; font-size: 0.85rem; font-weight: 600; cursor: pointer; position: relative; border: 1px solid transparent; }
+    .cal-day.empty { background: transparent; cursor: default; }
+    .cal-day.has-workout { background: #2e1f47; border-color: var(--accent); color: var(--accent); font-weight: bold; }
+    .cal-day.has-workout::after { content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; background: var(--accent); border-radius: 50%; }
+    .cal-day.selected { border-color: #fff !important; }
 
     /* Timer Bar */
     .timer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1f1f1f; border-top: 1px solid var(--card-border); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
@@ -62,7 +78,8 @@
 
   <!-- Navigation Tabs -->
   <div class="nav-tabs">
-    <button class="tab-btn active" onclick="switchTab('workout')">Today's Workout</button>
+    <button class="tab-btn active" onclick="switchTab('workout')">Log Workout</button>
+    <button class="tab-btn" onclick="switchTab('calendar')">Calendar</button>
     <button class="tab-btn" onclick="switchTab('history')">History</button>
   </div>
 
@@ -83,13 +100,13 @@
   </div>
 
   <script>
-    // Initial Default Single-Day Routine
     const defaultExercises = ["Bench Press", "Barbell Squat", "Barbell Row", "Overhead Press"];
 
     let currentTab = 'workout';
     let timerInterval = null;
+    let calDate = new Date();
+    let selectedCalDateStr = null;
 
-    // Load Routine state
     function getExercises() {
       const saved = localStorage.getItem('gt_single_routine');
       return saved ? JSON.parse(saved) : defaultExercises;
@@ -111,10 +128,24 @@
         return;
       }
 
+      if (currentTab === 'calendar') {
+        renderCalendar(container);
+        return;
+      }
+
       const exercises = getExercises();
+      const todayISO = new Date().toISOString().split('T')[0];
 
       let html = `<form id="workoutForm" onsubmit="saveWorkout(event)">`;
       
+      // Date Picker Card to log past workouts
+      html += `
+        <div class="card date-picker-card">
+          <label for="workoutDate">Workout Date:</label>
+          <input type="date" id="workoutDate" name="workoutDate" value="${todayISO}" required>
+        </div>
+      `;
+
       exercises.forEach((ex, exIndex) => {
         html += `
           <div class="card">
@@ -152,6 +183,95 @@
       container.innerHTML = html;
     }
 
+    function changeMonth(offset) {
+      calDate.setMonth(calDate.getMonth() + offset);
+      render();
+    }
+
+    function renderCalendar(container) {
+      const history = JSON.parse(localStorage.getItem('ns_history') || '[]');
+      const workoutDates = {};
+      history.forEach(item => {
+        const key = item.rawDate || new Date(item.date).toISOString().split('T')[0];
+        workoutDates[key] = item;
+      });
+
+      const year = calDate.getFullYear();
+      const month = calDate.getMonth();
+      const firstDayIndex = new Date(year, month, 1).getDay();
+      const totalDays = new Date(year, month + 1, 0).getDate();
+      const monthName = calDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+      let html = `
+        <div class="card">
+          <div class="cal-header">
+            <button type="button" onclick="changeMonth(-1)">‹</button>
+            <strong style="color:var(--accent);">${monthName}</strong>
+            <button type="button" onclick="changeMonth(1)">›</button>
+          </div>
+          <div class="cal-grid">
+            <div class="cal-day-label">S</div><div class="cal-day-label">M</div><div class="cal-day-label">T</div>
+            <div class="cal-day-label">W</div><div class="cal-day-label">T</div><div class="cal-day-label">F</div>
+            <div class="cal-day-label">S</div>
+      `;
+
+      for (let i = 0; i < firstDayIndex; i++) {
+        html += `<div class="cal-day empty"></div>`;
+      }
+
+      for (let day = 1; day <= totalDays; day++) {
+        const mStr = String(month + 1).padStart(2, '0');
+        const dStr = String(day).padStart(2, '0');
+        const dateKey = `${year}-${mStr}-${dStr}`;
+
+        const hasWorkout = workoutDates[dateKey] ? 'has-workout' : '';
+        const isSelected = selectedCalDateStr === dateKey ? 'selected' : '';
+
+        html += `<div class="cal-day ${hasWorkout} ${isSelected}" onclick="inspectCalDate('${dateKey}')">${day}</div>`;
+      }
+
+      html += `</div></div>`;
+
+      html += `<div id="calInspector">`;
+      if (selectedCalDateStr && workoutDates[selectedCalDateStr]) {
+        html += renderSingleWorkoutCard(workoutDates[selectedCalDateStr]);
+      } else if (selectedCalDateStr) {
+        html += `<div class="card"><p style="color:var(--text-dim); text-align:center;">No workout logged for this date.</p></div>`;
+      } else {
+        html += `<div class="card"><p style="color:var(--text-dim); text-align:center;">Tap a highlighted day to view details.</p></div>`;
+      }
+      html += `</div>`;
+
+      container.innerHTML = html;
+    }
+
+    function inspectCalDate(dateStr) {
+      selectedCalDateStr = dateStr;
+      render();
+    }
+
+    function renderSingleWorkoutCard(item) {
+      let html = `
+        <div class="card">
+          <div class="card-title">
+            <div>
+              <span>WORKOUT SESSION</span>
+              <div class="history-date">${item.date}</div>
+            </div>
+            <button class="btn-delete-log" onclick="deleteHistoryItem(${item.id})">Delete</button>
+          </div>`;
+      item.entries.forEach(entry => {
+        const setStr = entry.sets.map(s => `${s.weight}kg × ${s.reps}`).join(' | ');
+        html += `
+          <div class="history-item">
+            <strong style="font-size:0.9rem; color:var(--accent);">${entry.exercise}</strong>
+            <div style="font-size:0.85rem; color:var(--text-dim); margin-top:2px;">${setStr}</div>
+          </div>`;
+      });
+      html += `</div>`;
+      return html;
+    }
+
     function addExercise() {
       const name = prompt("Enter Exercise Name:");
       if (!name) return;
@@ -172,9 +292,15 @@
     function saveWorkout(e) {
       e.preventDefault();
       const formData = new FormData(e.target);
+      
+      const rawDate = formData.get('workoutDate');
+      const selectedDate = new Date(rawDate + 'T00:00:00');
+      const formattedDate = selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
       const log = {
         id: Date.now(),
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        date: formattedDate,
+        rawDate: rawDate,
         entries: []
       };
 
@@ -194,12 +320,14 @@
         return;
       }
 
-      const history = JSON.parse(localStorage.getItem('ns_history') || '[]');
-      history.unshift(log);
+      let history = JSON.parse(localStorage.getItem('ns_history') || '[]');
+      history.push(log);
+      history.sort((a, b) => new Date(b.rawDate || b.date) - new Date(a.rawDate || a.date));
+
       localStorage.setItem('ns_history', JSON.stringify(history));
 
       alert("Workout saved successfully!");
-      switchTab('history');
+      switchTab('calendar');
     }
 
     function deleteHistoryItem(id) {
@@ -207,7 +335,7 @@
       let history = JSON.parse(localStorage.getItem('ns_history') || '[]');
       history = history.filter(item => item.id !== id);
       localStorage.setItem('ns_history', JSON.stringify(history));
-      renderHistory(document.getElementById('workoutContainer'));
+      render();
     }
 
     function renderHistory(container) {
@@ -219,29 +347,11 @@
 
       let html = '';
       history.forEach(item => {
-        html += `
-          <div class="card">
-            <div class="card-title">
-              <div>
-                <span>WORKOUT SESSION</span>
-                <div class="history-date">${item.date}</div>
-              </div>
-              <button class="btn-delete-log" onclick="deleteHistoryItem(${item.id})">Delete</button>
-            </div>`;
-        item.entries.forEach(entry => {
-          const setStr = entry.sets.map(s => `${s.weight}kg × ${s.reps}`).join(' | ');
-          html += `
-            <div class="history-item">
-              <strong style="font-size:0.9rem; color:var(--accent);">${entry.exercise}</strong>
-              <div style="font-size:0.85rem; color:var(--text-dim); margin-top:2px;">${setStr}</div>
-            </div>`;
-        });
-        html += `</div>`;
+        html += renderSingleWorkoutCard(item);
       });
       container.innerHTML = html;
     }
 
-    // Timer functionality
     function startTimer(seconds) {
       clearInterval(timerInterval);
       let timeLeft = seconds;
@@ -268,9 +378,7 @@
       document.getElementById('timerText').innerText = `${mins}:${secs}`;
     }
 
-    // Initial Load
     render();
   </script>
 </body>
 </html>
-
