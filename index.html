@@ -109,7 +109,21 @@
     body { background-color: var(--bg); color: var(--text); padding: 16px; -webkit-tap-highlight-color: transparent; transition: background-color 0.2s ease, color 0.2s ease; }
 
     header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--card-border); padding-bottom: 12px; }
-    h1 { font-size: 1.6rem; color: var(--accent); font-weight: 800; letter-spacing: -0.5px; }
+    
+    /* Interactive Refresh Logo Button */
+    h1 { 
+      font-size: 1.6rem; 
+      color: var(--accent); 
+      font-weight: 800; 
+      letter-spacing: -0.5px; 
+      cursor: pointer; 
+      user-select: none;
+      transition: transform 0.1s ease, opacity 0.1s ease;
+    }
+    h1:active { 
+      transform: scale(0.95); 
+      opacity: 0.8; 
+    }
 
     .theme-select { 
       background: var(--card); 
@@ -200,7 +214,7 @@
 <body>
 
   <header>
-    <h1>Jacked.</h1>
+    <h1 onclick="refreshApp()" title="Tap to refresh app">Jacked.</h1>
     <select class="theme-select" id="themeSelect" onchange="changeTheme(this.value)">
       <option value="purple">Neon Purple</option>
       <option value="amoled">AMOLED Cyan</option>
@@ -227,6 +241,12 @@
     let calDate = new Date();
     let selectedCalDateStr = null;
     let editingLogId = null;
+
+    /* --- REFRESH FUNCTION --- */
+    function refreshApp() {
+      // Force reload page from server/network
+      window.location.reload();
+    }
 
     /* --- THEME MANAGEMENT --- */
     function applySavedTheme() {
