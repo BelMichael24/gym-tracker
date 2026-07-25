@@ -147,7 +147,8 @@
     .btn:active { opacity: 0.8; }
     .btn-secondary { background: var(--card); color: var(--text-dim); border: 1px solid var(--card-border); margin-top: 4px; }
     .btn-del { background: transparent; color: var(--danger); font-size: 1.2rem; border: none; height: 36px; cursor: pointer; }
-    .btn-delete-log { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+    .btn-action-log { background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-left: 6px; }
+    .btn-delete-log { color: var(--danger); border-color: var(--danger); }
 
     /* Calendar Styling */
     .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
@@ -188,8 +189,8 @@
 
   <!-- Navigation Tabs -->
   <div class="nav-tabs">
-    <button class="tab-btn active" onclick="switchTab('workout', event)">Log Workout</button>
-    <button class="tab-btn" onclick="switchTab('progress', event)">Progress</button>
+    <button class="tab-btn active" id="tabWorkoutBtn" onclick="switchTab('workout', event)">Log Workout</button>
+    <button class="tab-btn" id="tabProgressBtn" onclick="switchTab('progress', event)">Progress</button>
   </div>
 
   <!-- Dynamic Content Container -->
@@ -201,6 +202,7 @@
     let currentTab = 'workout';
     let calDate = new Date();
     let selectedCalDateStr = null;
+    let editingLogId = null; // Tracks if we are editing an existing log
 
     /* --- THEME MANAGEMENT --- */
     function applySavedTheme() {
@@ -224,11 +226,27 @@
     function switchTab(tab, evt) {
       currentTab = tab;
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      if (evt) evt.target.classList.add('active');
+      if (evt) {
+        evt.target.classList.add('active');
+      } else {
+        const btnId = tab === 'workout' ? 'tabWorkoutBtn' : 'tabProgressBtn';
+        const targetBtn = document.getElementById(btnId);
+        if (targetBtn) targetBtn.classList.add('active');
+      }
+      
+      // Reset edit state if user manually switches tabs without saving
+      if (tab === 'progress') editingLogId = null; 
       render();
     }
 
-    function buildExerciseCardHTML(ex) {
+    function buildExerciseCardHTML(ex, initialValues = {}) {
+      const w1 = initialValues.w1 || '';
+      const r1 = initialValues.r1 || '';
+      const w2 = initialValues.w2 || '';
+      const r2 = initialValues.r2 || '';
+      const w3 = initialValues.w3 || '';
+      const r3 = initialValues.r3 || '';
+
       return `
         <div class="card exercise-card-item" data-exercise-name="${ex}">
           <div class="card-title">
@@ -240,20 +258,20 @@
           </div>
           <div class="set-row">
             <input type="text" value="Set 1" readonly>
-            <input type="number" step="any" name="${ex}_w1" placeholder="0">
-            <input type="number" step="any" name="${ex}_r1" placeholder="0">
+            <input type="number" step="any" name="${ex}_w1" placeholder="0" value="${w1}">
+            <input type="number" step="any" name="${ex}_r1" placeholder="0" value="${r1}">
             <div></div>
           </div>
           <div class="set-row">
             <input type="text" value="Set 2" readonly>
-            <input type="number" step="any" name="${ex}_w2" placeholder="0">
-            <input type="number" step="any" name="${ex}_r2" placeholder="0">
+            <input type="number" step="any" name="${ex}_w2" placeholder="0" value="${w2}">
+            <input type="number" step="any" name="${ex}_r2" placeholder="0" value="${r2}">
             <div></div>
           </div>
           <div class="set-row">
             <input type="text" value="Set 3" readonly>
-            <input type="number" step="any" name="${ex}_w3" placeholder="0">
-            <input type="number" step="any" name="${ex}_r3" placeholder="0">
+            <input type="number" step="any" name="${ex}_w3" placeholder="0" value="${w3}">
+            <input type="number" step="any" name="${ex}_r3" placeholder="0" value="${r3}">
             <div></div>
           </div>
         </div>
@@ -269,30 +287,60 @@
         return;
       }
 
-      const exercises = getExercises();
-      const todayISO = new Date().toISOString().split('T')[0];
+      const history = JSON.parse(localStorage.getItem('ns_history') || '[]');
+      const editingLog = editingLogId ? history.find(item => item.id === editingLogId) : null;
+
+      const todayISO = editingLog ? editingLog.rawDate : new Date().toISOString().split('T')[0];
 
       let html = `<form id="workoutForm" onsubmit="saveWorkout(event)">`;
       
       html += `
         <div class="card date-picker-card">
-          <label for="workoutDate">Workout Date:</label>
+          <label for="workoutDate">${editingLog ? 'Editing Workout Date:' : 'Workout Date:'}</label>
           <input type="date" id="workoutDate" name="workoutDate" value="${todayISO}" required>
         </div>
         <div id="exerciseCardsList">
       `;
 
-      exercises.forEach((ex) => {
-        html += buildExerciseCardHTML(ex);
-      });
+      if (editingLog) {
+        // Render exercises belonging to the log being edited
+        editingLog.entries.forEach(entry => {
+          const vals = {
+            w1: entry.sets[0] ? entry.sets[0].weight : '',
+            r1: entry.sets[0] ? entry.sets[0].reps : '',
+            w2: entry.sets[1] ? entry.sets[1].weight : '',
+            r2: entry.sets[1] ? entry.sets[1].reps : '',
+            w3: entry.sets[2] ? entry.sets[2].weight : '',
+            r3: entry.sets[2] ? entry.sets[2].reps : ''
+          };
+          html += buildExerciseCardHTML(entry.exercise, vals);
+        });
+      } else {
+        // Standard blank entry form
+        const exercises = getExercises();
+        exercises.forEach((ex) => {
+          html += buildExerciseCardHTML(ex);
+        });
+      }
 
       html += `
         </div>
         <button type="button" class="btn btn-secondary" onclick="addExercise()">+ Add Exercise</button>
-        <button type="submit" class="btn" style="margin-top:16px;">Finish & Save Workout</button>
+        <button type="submit" class="btn" style="margin-top:16px;">${editingLog ? 'Update Workout' : 'Finish & Save Workout'}</button>
+        ${editingLog ? `<button type="button" class="btn btn-secondary" style="margin-top:8px; color:var(--danger);" onclick="cancelEdit()">Cancel Edit</button>` : ''}
       </form>`;
 
       container.innerHTML = html;
+    }
+
+    function cancelEdit() {
+      editingLogId = null;
+      render();
+    }
+
+    function editHistoryItem(id) {
+      editingLogId = id;
+      switchTab('workout');
     }
 
     function changeMonth(offset) {
@@ -508,7 +556,10 @@
               <span>WORKOUT SESSION</span>
               <div class="history-date">${item.date}</div>
             </div>
-            <button class="btn-delete-log" onclick="deleteHistoryItem(${item.id})">Delete</button>
+            <div>
+              <button class="btn-action-log" onclick="editHistoryItem(${item.id})">Edit</button>
+              <button class="btn-action-log btn-delete-log" onclick="deleteHistoryItem(${item.id})">Delete</button>
+            </div>
           </div>`;
       item.entries.forEach(entry => {
         const setStr = entry.sets.map(s => `${s.weight}kg × ${s.reps}`).join(' | ');
@@ -526,8 +577,10 @@
       const name = prompt("Enter Exercise Name:");
       if (!name) return;
       const exercises = getExercises();
-      exercises.push(name);
-      localStorage.setItem('gt_single_routine', JSON.stringify(exercises));
+      if (!exercises.includes(name)) {
+        exercises.push(name);
+        localStorage.setItem('gt_single_routine', JSON.stringify(exercises));
+      }
 
       const listContainer = document.getElementById('exerciseCardsList');
       if (listContainer) {
@@ -538,14 +591,15 @@
     }
 
     function removeExerciseCard(buttonElem, exName) {
-      if (!confirm(`Remove "${exName}" from this workout?`)) return;
-
       const card = buttonElem.closest('.card');
       if (card) card.remove();
 
-      const exercises = getExercises();
-      const updatedExercises = exercises.filter(ex => ex !== exName);
-      localStorage.setItem('gt_single_routine', JSON.stringify(updatedExercises));
+      // Only delete from global routine if not editing a historical log
+      if (!editingLogId) {
+        const exercises = getExercises();
+        const updatedExercises = exercises.filter(ex => ex !== exName);
+        localStorage.setItem('gt_single_routine', JSON.stringify(updatedExercises));
+      }
     }
 
     function saveWorkout(e) {
@@ -557,7 +611,7 @@
       const formattedDate = selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
       const log = {
-        id: Date.now(),
+        id: editingLogId ? editingLogId : Date.now(),
         date: formattedDate,
         rawDate: rawDate,
         entries: []
@@ -580,17 +634,25 @@
       }
 
       let history = JSON.parse(localStorage.getItem('ns_history') || '[]');
-      history.push(log);
-      history.sort((a, b) => new Date(b.rawDate || b.date) - new Date(a.rawDate || a.date));
+      
+      if (editingLogId) {
+        // Update existing entry in-place
+        const index = history.findIndex(item => item.id === editingLogId);
+        if (index !== -1) history[index] = log;
+        editingLogId = null;
+      } else {
+        // Add new entry
+        history.push(log);
+      }
 
+      history.sort((a, b) => new Date(b.rawDate || b.date) - new Date(a.rawDate || a.date));
       localStorage.setItem('ns_history', JSON.stringify(history));
 
-      alert("Workout saved successfully!");
+      alert(editingLogId ? "Workout updated!" : "Workout saved successfully!");
       switchTab('progress');
     }
 
     function deleteHistoryItem(id) {
-      if (!confirm("Are you sure you want to delete this workout entry?")) return;
       let history = JSON.parse(localStorage.getItem('ns_history') || '[]');
       history = history.filter(item => item.id !== id);
       localStorage.setItem('ns_history', JSON.stringify(history));
