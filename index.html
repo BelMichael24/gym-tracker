@@ -2,473 +2,208 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#121212">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="manifest" href="manifest.json">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gym Tracker</title>
   <style>
     :root {
       --bg: #121212;
-      --card: #1e1e1e;
-      --card-border: #2e2e2e;
-      --accent: #bb86fc;
-      --accent-hover: #9955e8;
+      --card-bg: #1e1e1e;
+      --accent: #ff4757;
       --text: #ffffff;
-      --text-dim: #a0a0a0;
-      --danger: #cf6679;
-      --success: #03dac6;
+      --subtext: #a0a0a0;
+      --input-bg: #2a2a2a;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: 16px; padding-bottom: 90px; -webkit-tap-highlight-color: transparent; }
-
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--card-border); padding-bottom: 12px; }
-    h1 { font-size: 1.4rem; color: var(--accent); font-weight: 700; }
-
-    .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; }
-    .tab-btn { flex: 1; background: var(--card); border: 1px solid var(--card-border); color: var(--text-dim); padding: 10px 4px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; text-align: center; white-space: nowrap; }
-    .tab-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
-
-    .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-    .card-title { font-size: 1.1rem; margin-bottom: 12px; color: var(--text); display: flex; justify-content: space-between; align-items: center; }
-    
-    .date-picker-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    .date-picker-card label { font-size: 0.9rem; color: var(--accent); font-weight: 600; }
-    .date-picker-card input[type="date"] { background: #2a2a2a; border: 1px solid var(--card-border); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; text-align: center; width: auto; color-scheme: dark; }
-
-    .set-row { display: grid; grid-template-columns: 2fr 1fr 1fr 40px; gap: 8px; align-items: center; margin-bottom: 8px; }
-    input { background: #2a2a2a; border: 1px solid var(--card-border); color: #fff; padding: 8px; border-radius: 6px; font-size: 0.9rem; width: 100%; text-align: center; }
-    input[type="text"] { text-align: left; }
-    input:focus { border-color: var(--accent); outline: none; }
-
-    .btn { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; font-size: 0.95rem; margin-top: 8px; }
-    .btn:active { opacity: 0.8; }
-    .btn-secondary { background: #2a2a2a; color: var(--text-dim); border: 1px solid var(--card-border); margin-top: 4px; }
-    .btn-del { background: transparent; color: var(--danger); font-size: 1.2rem; border: none; height: 36px; cursor: pointer; }
-    .btn-delete-log { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
-
-    /* Calendar Styling */
-    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .cal-header button { background: #2a2a2a; border: 1px solid var(--card-border); color: var(--text); padding: 6px 12px; border-radius: 6px; font-weight: bold; }
-    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
-    .cal-day-label { font-size: 0.75rem; color: var(--text-dim); font-weight: bold; padding-bottom: 4px; }
-    .cal-day { background: #2a2a2a; border-radius: 8px; padding: 10px 0; font-size: 0.85rem; font-weight: 600; cursor: pointer; position: relative; border: 1px solid transparent; }
-    .cal-day.empty { background: transparent; cursor: default; }
-    .cal-day.has-workout { background: #2e1f47; border-color: var(--accent); color: var(--accent); font-weight: bold; }
-    .cal-day.has-workout::after { content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; background: var(--accent); border-radius: 50%; }
-    .cal-day.selected { border-color: #fff !important; }
-
-    /* Timer Bar */
-    .timer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1f1f1f; border-top: 1px solid var(--card-border); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
-    .timer-display { font-size: 1.2rem; font-weight: bold; color: var(--success); font-family: monospace; }
-    .timer-btn { background: var(--card-border); color: var(--text); border: none; padding: 8px 14px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; }
-    
-    /* Alarm Active State */
-    .timer-bar.alarm-active { background: #b00020; animation: pulse 0.8s infinite alternate; }
-    .timer-bar.alarm-active .timer-display { color: #fff; }
-    .btn-stop-alarm { background: #fff; color: #b00020; font-weight: bold; padding: 8px 16px; border-radius: 6px; border: none; font-size: 0.9rem; cursor: pointer; }
-
-    @keyframes pulse {
-      from { background: #b00020; }
-      to { background: #cf6679; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 16px;
+      padding-bottom: 80px;
     }
 
-    .history-item { border-bottom: 1px solid var(--card-border); padding: 10px 0; }
-    .history-item:last-child { border-bottom: none; }
-    .history-date { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 4px; }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 16px;
+    }
+
+    .exercise-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .exercise-name-input {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--subtext);
+      color: var(--text);
+      font-size: 1.1rem;
+      font-weight: bold;
+      width: 80%;
+      padding: 4px 0;
+    }
+
+    .exercise-name-input:focus {
+      outline: none;
+      border-bottom-color: var(--accent);
+    }
+
+    .btn-delete {
+      background: transparent;
+      border: none;
+      color: var(--subtext);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+
+    .btn-delete:hover {
+      color: var(--accent);
+    }
+
+    .card-body {
+      display: flex;
+      gap: 12px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .input-group label {
+      font-size: 0.75rem;
+      color: var(--subtext);
+      margin-bottom: 4px;
+    }
+
+    input[type="number"] {
+      background: var(--input-bg);
+      border: 1px solid transparent;
+      border-radius: 8px;
+      color: var(--text);
+      padding: 10px;
+      font-size: 1rem;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .btn-add {
+      width: 100%;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+
+    .btn-add:active {
+      opacity: 0.8;
+    }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>GYM TRACKER</h1>
-  </header>
+  <h1>Workout Tracker</h1>
 
-  <!-- Navigation Tabs -->
-  <div class="nav-tabs">
-    <button class="tab-btn active" onclick="switchTab('workout')">Log Workout</button>
-    <button class="tab-btn" onclick="switchTab('calendar')">Calendar</button>
-    <button class="tab-btn" onclick="switchTab('history')">History</button>
+  <div id="exercise-container">
+    <!-- Exercise cards will render here -->
   </div>
 
-  <!-- Dynamic Content Container -->
-  <div id="workoutContainer"></div>
-
-  <!-- Bottom Rest Timer Bar -->
-  <div class="timer-bar" id="timerBar">
-    <div>
-      <span style="font-size:0.75rem; color:var(--text-dim); display:block;" id="timerLabel">REST TIMER</span>
-      <span class="timer-display" id="timerText">01:30</span>
-    </div>
-    <div style="display:flex; gap:8px;" id="timerControls">
-      <button class="timer-btn" onclick="startTimer(60)">60s</button>
-      <button class="timer-btn" onclick="startTimer(90)">90s</button>
-      <button class="timer-btn" onclick="resetTimer()">Stop</button>
-    </div>
-  </div>
+  <button class="btn-add" onclick="addExercise()">+ Add Exercise</button>
 
   <script>
-    const defaultExercises = ["Bench Press", "Barbell Squat", "Barbell Row", "Overhead Press"];
+    const container = document.getElementById('exercise-container');
 
-    let currentTab = 'workout';
-    let timerInterval = null;
-    let alarmBeepInterval = null;
-    let audioCtx = null;
-    let calDate = new Date();
-    let selectedCalDateStr = null;
+    // Create and append a new exercise card
+    function createCardElement(data = { name: '', weight: '', reps: '' }) {
+      const card = document.createElement('div');
+      card.className = 'exercise-card';
 
-    function getExercises() {
-      const saved = localStorage.getItem('gt_single_routine');
-      return saved ? JSON.parse(saved) : defaultExercises;
-    }
-
-    function switchTab(tab) {
-      currentTab = tab;
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
-      render();
-    }
-
-    function render() {
-      const container = document.getElementById('workoutContainer');
-      container.innerHTML = '';
-
-      if (currentTab === 'history') {
-        renderHistory(container);
-        return;
-      }
-
-      if (currentTab === 'calendar') {
-        renderCalendar(container);
-        return;
-      }
-
-      const exercises = getExercises();
-      const todayISO = new Date().toISOString().split('T')[0];
-
-      let html = `<form id="workoutForm" onsubmit="saveWorkout(event)">`;
-      
-      html += `
-        <div class="card date-picker-card">
-          <label for="workoutDate">Workout Date:</label>
-          <input type="date" id="workoutDate" name="workoutDate" value="${todayISO}" required>
+      card.innerHTML = `
+        <div class="card-header">
+          <input type="text" class="exercise-name-input" value="${data.name}" placeholder="Exercise Name" oninput="saveCurrentWorkoutState()">
+          <button class="btn-delete" onclick="deleteExercise(this)">✕</button>
+        </div>
+        <div class="card-body">
+          <div class="input-group">
+            <label>WEIGHT</label>
+            <!-- step="any" allows decimals like 11.8, 12.5, etc. -->
+            <input type="number" step="any" class="weight-input" value="${data.weight}" placeholder="0" oninput="saveCurrentWorkoutState()">
+          </div>
+          <div class="input-group">
+            <label>REPS</label>
+            <!-- step="any" also added here in case of fractional reps/half reps -->
+            <input type="number" step="any" class="reps-input" value="${data.reps}" placeholder="0" oninput="saveCurrentWorkoutState()">
+          </div>
         </div>
       `;
 
-      exercises.forEach((ex, exIndex) => {
-        html += `
-          <div class="card">
-            <div class="card-title">
-              <span>${ex}</span>
-              <button type="button" class="btn-del" onclick="removeExercise(${exIndex})">✕</button>
-            </div>
-            <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:8px; margin-bottom:6px; font-size:0.75rem; color:var(--text-dim);">
-              <span>Exercise / Set</span><span>Kg</span><span>Reps</span>
-            </div>
-            <div class="set-row">
-              <input type="text" value="Set 1" readonly>
-              <input type="number" step="0.5" name="${ex}_w1" placeholder="0">
-              <input type="number" name="${ex}_r1" placeholder="0">
-            </div>
-            <div class="set-row">
-              <input type="text" value="Set 2" readonly>
-              <input type="number" step="0.5" name="${ex}_w2" placeholder="0">
-              <input type="number" name="${ex}_r2" placeholder="0">
-            </div>
-            <div class="set-row">
-              <input type="text" value="Set 3" readonly>
-              <input type="number" step="0.5" name="${ex}_w3" placeholder="0">
-              <input type="number" name="${ex}_r3" placeholder="0">
-            </div>
-          </div>
-        `;
-      });
-
-      html += `
-        <button type="button" class="btn btn-secondary" onclick="addExercise()">+ Add Exercise</button>
-        <button type="submit" class="btn" style="margin-top:16px;">Finish & Save Workout</button>
-      </form>`;
-
-      container.innerHTML = html;
+      return card;
     }
 
-    function changeMonth(offset) {
-      calDate.setMonth(calDate.getMonth() + offset);
-      render();
-    }
-
-    function renderCalendar(container) {
-      const history = JSON.parse(localStorage.getItem('ns_history') || '[]');
-      const workoutDates = {};
-      history.forEach(item => {
-        const key = item.rawDate || new Date(item.date).toISOString().split('T')[0];
-        workoutDates[key] = item;
-      });
-
-      const year = calDate.getFullYear();
-      const month = calDate.getMonth();
-      const firstDayIndex = new Date(year, month, 1).getDay();
-      const totalDays = new Date(year, month + 1, 0).getDate();
-      const monthName = calDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-
-      let html = `
-        <div class="card">
-          <div class="cal-header">
-            <button type="button" onclick="changeMonth(-1)">‹</button>
-            <strong style="color:var(--accent);">${monthName}</strong>
-            <button type="button" onclick="changeMonth(1)">›</button>
-          </div>
-          <div class="cal-grid">
-            <div class="cal-day-label">S</div><div class="cal-day-label">M</div><div class="cal-day-label">T</div>
-            <div class="cal-day-label">W</div><div class="cal-day-label">T</div><div class="cal-day-label">F</div>
-            <div class="cal-day-label">S</div>
-      `;
-
-      for (let i = 0; i < firstDayIndex; i++) {
-        html += `<div class="cal-day empty"></div>`;
-      }
-
-      for (let day = 1; day <= totalDays; day++) {
-        const mStr = String(month + 1).padStart(2, '0');
-        const dStr = String(day).padStart(2, '0');
-        const dateKey = `${year}-${mStr}-${dStr}`;
-
-        const hasWorkout = workoutDates[dateKey] ? 'has-workout' : '';
-        const isSelected = selectedCalDateStr === dateKey ? 'selected' : '';
-
-        html += `<div class="cal-day ${hasWorkout} ${isSelected}" onclick="inspectCalDate('${dateKey}')">${day}</div>`;
-      }
-
-      html += `</div></div>`;
-
-      html += `<div id="calInspector">`;
-      if (selectedCalDateStr && workoutDates[selectedCalDateStr]) {
-        html += renderSingleWorkoutCard(workoutDates[selectedCalDateStr]);
-      } else if (selectedCalDateStr) {
-        html += `<div class="card"><p style="color:var(--text-dim); text-align:center;">No workout logged for this date.</p></div>`;
-      } else {
-        html += `<div class="card"><p style="color:var(--text-dim); text-align:center;">Tap a highlighted day to view details.</p></div>`;
-      }
-      html += `</div>`;
-
-      container.innerHTML = html;
-    }
-
-    function inspectCalDate(dateStr) {
-      selectedCalDateStr = dateStr;
-      render();
-    }
-
-    function renderSingleWorkoutCard(item) {
-      let html = `
-        <div class="card">
-          <div class="card-title">
-            <div>
-              <span>WORKOUT SESSION</span>
-              <div class="history-date">${item.date}</div>
-            </div>
-            <button class="btn-delete-log" onclick="deleteHistoryItem(${item.id})">Delete</button>
-          </div>`;
-      item.entries.forEach(entry => {
-        const setStr = entry.sets.map(s => `${s.weight}kg × ${s.reps}`).join(' | ');
-        html += `
-          <div class="history-item">
-            <strong style="font-size:0.9rem; color:var(--accent);">${entry.exercise}</strong>
-            <div style="font-size:0.85rem; color:var(--text-dim); margin-top:2px;">${setStr}</div>
-          </div>`;
-      });
-      html += `</div>`;
-      return html;
-    }
-
+    // Add a new empty exercise without disturbing existing inputs
     function addExercise() {
-      const name = prompt("Enter Exercise Name:");
-      if (!name) return;
-      const exercises = getExercises();
-      exercises.push(name);
-      localStorage.setItem('gt_single_routine', JSON.stringify(exercises));
-      render();
+      const newCard = createCardElement();
+      container.appendChild(newCard);
+      saveCurrentWorkoutState();
     }
 
-    function removeExercise(index) {
-      if (!confirm("Remove this exercise from your template?")) return;
-      const exercises = getExercises();
-      exercises.splice(index, 1);
-      localStorage.setItem('gt_single_routine', JSON.stringify(exercises));
-      render();
+    // Direct DOM Deletion: Removes ONLY the clicked card and keeps all other active inputs intact
+    function deleteExercise(buttonElement) {
+      const card = buttonElement.closest('.exercise-card');
+      if (card) {
+        card.remove(); // Removes node directly from DOM
+        saveCurrentWorkoutState(); // Syncs state to localStorage
+      }
     }
 
-    function saveWorkout(e) {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      
-      const rawDate = formData.get('workoutDate');
-      const selectedDate = new Date(rawDate + 'T00:00:00');
-      const formattedDate = selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-
-      const log = {
-        id: Date.now(),
-        date: formattedDate,
-        rawDate: rawDate,
-        entries: []
-      };
-
-      const exercises = getExercises();
-      exercises.forEach(ex => {
-        const sets = [];
-        for (let i = 1; i <= 3; i++) {
-          const w = formData.get(`${ex}_w${i}`);
-          const r = formData.get(`${ex}_r${i}`);
-          if (w || r) sets.push({ weight: w || 0, reps: r || 0 });
-        }
-        if (sets.length > 0) log.entries.push({ exercise: ex, sets });
+    // Scrapes current input values directly from screen and saves to localStorage
+    function saveCurrentWorkoutState() {
+      const exercises = [];
+      document.querySelectorAll('.exercise-card').forEach(card => {
+        const name = card.querySelector('.exercise-name-input')?.value || '';
+        const weight = card.querySelector('.weight-input')?.value || '';
+        const reps = card.querySelector('.reps-input')?.value || '';
+        exercises.push({ name, weight, reps });
       });
 
-      if (log.entries.length === 0) {
-        alert("Please log at least one set before saving.");
-        return;
-      }
-
-      let history = JSON.parse(localStorage.getItem('ns_history') || '[]');
-      history.push(log);
-      history.sort((a, b) => new Date(b.rawDate || b.date) - new Date(a.rawDate || a.date));
-
-      localStorage.setItem('ns_history', JSON.stringify(history));
-
-      alert("Workout saved successfully!");
-      switchTab('calendar');
+      localStorage.setItem('gymTracker_currentWorkout', JSON.stringify(exercises));
     }
 
-    function deleteHistoryItem(id) {
-      if (!confirm("Are you sure you want to delete this workout entry?")) return;
-      let history = JSON.parse(localStorage.getItem('ns_history') || '[]');
-      history = history.filter(item => item.id !== id);
-      localStorage.setItem('ns_history', JSON.stringify(history));
-      render();
-    }
-
-    function renderHistory(container) {
-      const history = JSON.parse(localStorage.getItem('ns_history') || '[]');
-      if (history.length === 0) {
-        container.innerHTML = `<div class="card"><p style="color:var(--text-dim); text-align:center;">No logged workouts yet.</p></div>`;
-        return;
-      }
-
-      let html = '';
-      history.forEach(item => {
-        html += renderSingleWorkoutCard(item);
-      });
-      container.innerHTML = html;
-    }
-
-    /* --- ALARM SOUND & TIMER LOGIC --- */
-    function playBeep() {
-      try {
-        if (!audioCtx) {
-          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioCtx.state === 'suspended') {
-          audioCtx.resume();
-        }
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Pitch A5
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.2); // 200ms beep length
-      } catch (e) {
-        console.log("Audio play prevented:", e);
+    // Load initial data on page load
+    function loadSavedWorkout() {
+      const saved = localStorage.getItem('gymTracker_currentWorkout');
+      if (saved) {
+        const exercises = JSON.parse(saved);
+        exercises.forEach(ex => container.appendChild(createCardElement(ex)));
+      } else {
+        // Default card if empty
+        addExercise();
       }
     }
 
-    function triggerAlarm() {
-      // Repeat vibration pattern: 300ms rumble, 200ms pause
-      if (navigator.vibrate) {
-        navigator.vibrate([300, 200, 300, 200, 300, 200, 300, 200, 300]);
-      }
-
-      // Play audio beeps every 600ms
-      playBeep();
-      alarmBeepInterval = setInterval(() => {
-        playBeep();
-        if (navigator.vibrate) navigator.vibrate([300, 200]);
-      }, 600);
-
-      // UI changes for Alarm state
-      const timerBar = document.getElementById('timerBar');
-      const timerLabel = document.getElementById('timerLabel');
-      const timerText = document.getElementById('timerText');
-      const timerControls = document.getElementById('timerControls');
-
-      timerBar.classList.add('alarm-active');
-      timerLabel.innerText = "REST FINISHED!";
-      timerText.innerText = "00:00";
-      timerControls.innerHTML = `<button class="btn-stop-alarm" onclick="stopAlarm()">STOP ALARM</button>`;
-    }
-
-    function stopAlarm() {
-      if (alarmBeepInterval) clearInterval(alarmBeepInterval);
-      if (navigator.vibrate) navigator.vibrate(0); // Stop vibration immediately
-
-      const timerBar = document.getElementById('timerBar');
-      const timerLabel = document.getElementById('timerLabel');
-      const timerControls = document.getElementById('timerControls');
-
-      timerBar.classList.remove('alarm-active');
-      timerLabel.innerText = "REST TIMER";
-      timerControls.innerHTML = `
-        <button class="timer-btn" onclick="startTimer(60)">60s</button>
-        <button class="timer-btn" onclick="startTimer(90)">90s</button>
-        <button class="timer-btn" onclick="resetTimer()">Stop</button>
-      `;
-      resetTimer();
-    }
-
-    function startTimer(seconds) {
-      stopAlarm();
-      clearInterval(timerInterval);
-
-      // Init audio context on user interaction tap so mobile browser allows sound later
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-
-      let timeLeft = seconds;
-      updateTimerDisplay(timeLeft);
-
-      timerInterval = setInterval(() => {
-        timeLeft--;
-        updateTimerDisplay(timeLeft);
-        if (timeLeft <= 0) {
-          clearInterval(timerInterval);
-          triggerAlarm();
-        }
-      }, 1000);
-    }
-
-    function resetTimer() {
-      clearInterval(timerInterval);
-      if (alarmBeepInterval) clearInterval(alarmBeepInterval);
-      if (navigator.vibrate) navigator.vibrate(0);
-      
-      const timerBar = document.getElementById('timerBar');
-      if (timerBar) timerBar.classList.remove('alarm-active');
-      
-      updateTimerDisplay(90);
-    }
-
-    function updateTimerDisplay(s) {
-      const mins = Math.floor(s / 60).toString().padStart(2, '0');
-      const secs = (s % 60).toString().padStart(2, '0');
-      document.getElementById('timerText').innerText = `${mins}:${secs}`;
-    }
-
-    render();
+    // Initialize
+    loadSavedWorkout();
   </script>
 </body>
 </html>
