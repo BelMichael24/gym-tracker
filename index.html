@@ -21,6 +21,30 @@
       --success: #03dac6;
     }
 
+    [data-theme="orange"] {
+      --bg: #110d0a;
+      --card: #1e1713;
+      --card-border: #33261f;
+      --accent: #ff6600;
+      --accent-hover: #e05500;
+      --text: #ffffff;
+      --text-dim: #b89c8a;
+      --danger: #ff4d4d;
+      --success: #ff9900;
+    }
+
+    [data-theme="frost"] {
+      --bg: #0b1319;
+      --card: #13212b;
+      --card-border: #203545;
+      --accent: #00f2fe;
+      --accent-hover: #00c6ff;
+      --text: #f0f9ff;
+      --text-dim: #84a2b8;
+      --danger: #ff5252;
+      --success: #00e676;
+    }
+
     [data-theme="amoled"] {
       --bg: #000000;
       --card: #121212;
@@ -255,6 +279,8 @@
     <h1 id="appLogo" onclick="refreshApp()" title="Tap to refresh app">Jacked.</h1>
     <select class="theme-select" id="themeSelect" onchange="changeTheme(this.value)">
       <option value="purple">Neon Purple</option>
+      <option value="orange">Cyber Orange</option>
+      <option value="frost">Nordic Frost</option>
       <option value="amoled">AMOLED Cyan</option>
       <option value="slate">Slate Blue</option>
       <option value="forest">Forest Green</option>
@@ -335,7 +361,6 @@
       return saved ? JSON.parse(saved) : defaultExercises;
     }
 
-    /* Helper: Combines active exercise list with past history names so nothing is lost */
     function getAllKnownExercises() {
       const list = new Set(getExercises());
       const history = JSON.parse(localStorage.getItem('ns_history') || '[]');
@@ -520,7 +545,6 @@
         name = dropdownVal;
       }
 
-      // Check if card is already currently displayed in workout view to prevent duplicates in same session
       const existingCard = document.querySelector(`.exercise-card-item[data-exercise-name="${name}"]`);
       if (existingCard) {
         alert(`"${name}" is already in this workout card list.`);
@@ -555,7 +579,6 @@
       const uniqueExercises = Array.from(exercisesSet);
 
       let html = `
-        <!-- Strength Progress Chart -->
         <div class="card">
           <div class="card-title">
             <span>Strength Chart</span>
@@ -568,7 +591,6 @@
           </div>
         </div>
 
-        <!-- Monthly Calendar Grid & Inspector -->
         ${renderCalendarHTML(history)}
       `;
 
@@ -819,10 +841,7 @@
 
       alert(wasEditing ? "Workout updated!" : "Workout saved successfully!");
 
-      // Clear form inputs after saving
       e.target.reset();
-
-      // Switch to progress tab
       switchTab('progress');
     }
 
@@ -834,7 +853,6 @@
       render();
     }
 
-    // Initialize App and Theme
     applySavedTheme();
     render();
   </script>
