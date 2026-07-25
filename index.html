@@ -6,10 +6,10 @@
   <meta name="theme-color" content="#121212">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="manifest" href="manifest.json">
-  <title>Gym Tracker</title>
+  <title>Jacked.</title>
   <style>
-    :root {
+    /* Theme Definitions via CSS Variables */
+    :root, [data-theme="purple"] {
       --bg: #121212;
       --card: #1e1e1e;
       --card-border: #2e2e2e;
@@ -21,49 +21,88 @@
       --success: #03dac6;
     }
 
+    [data-theme="amoled"] {
+      --bg: #000000;
+      --card: #121212;
+      --card-border: #222222;
+      --accent: #00e5ff;
+      --accent-hover: #00b0ff;
+      --text: #ffffff;
+      --text-dim: #888888;
+      --danger: #ff5252;
+      --success: #00e676;
+    }
+
+    [data-theme="slate"] {
+      --bg: #1a1d24;
+      --card: #222733;
+      --card-border: #31384a;
+      --accent: #64b5f6;
+      --accent-hover: #42a5f5;
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --danger: #e57373;
+      --success: #81c784;
+    }
+
+    [data-theme="forest"] {
+      --bg: #101915;
+      --card: #17241e;
+      --card-border: #24382f;
+      --accent: #5cdb95;
+      --accent-hover: #38b000;
+      --text: #edf5e1;
+      --text-dim: #8ee4af;
+      --danger: #ff6b6b;
+      --success: #5cdb95;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: 16px; padding-bottom: 90px; -webkit-tap-highlight-color: transparent; }
+    body { background-color: var(--bg); color: var(--text); padding: 16px; padding-bottom: 90px; -webkit-tap-highlight-color: transparent; transition: background-color 0.2s ease, color 0.2s ease; }
 
     header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--card-border); padding-bottom: 12px; }
-    h1 { font-size: 1.4rem; color: var(--accent); font-weight: 700; }
+    h1 { font-size: 1.6rem; color: var(--accent); font-weight: 800; letter-spacing: -0.5px; }
+
+    /* Theme Switcher Dropdown Styling */
+    .theme-select { background: var(--card); color: var(--accent); border: 1px solid var(--card-border); padding: 6px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; outline: none; cursor: pointer; }
 
     .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; }
     .tab-btn { flex: 1; background: var(--card); border: 1px solid var(--card-border); color: var(--text-dim); padding: 10px 4px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; text-align: center; white-space: nowrap; }
     .tab-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
 
-    .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; margin-bottom: 16px; transition: background-color 0.2s ease, border-color 0.2s ease; }
     .card-title { font-size: 1.1rem; margin-bottom: 12px; color: var(--text); display: flex; justify-content: space-between; align-items: center; }
     
     .date-picker-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
     .date-picker-card label { font-size: 0.9rem; color: var(--accent); font-weight: 600; }
-    .date-picker-card input[type="date"] { background: #2a2a2a; border: 1px solid var(--card-border); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; text-align: center; width: auto; color-scheme: dark; }
+    .date-picker-card input[type="date"] { background: var(--bg); border: 1px solid var(--card-border); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; text-align: center; width: auto; color-scheme: dark; }
 
     .set-row { display: grid; grid-template-columns: 2fr 1fr 1fr 40px; gap: 8px; align-items: center; margin-bottom: 8px; }
-    input { background: #2a2a2a; border: 1px solid var(--card-border); color: #fff; padding: 8px; border-radius: 6px; font-size: 0.9rem; width: 100%; text-align: center; }
+    input { background: var(--bg); border: 1px solid var(--card-border); color: #fff; padding: 8px; border-radius: 6px; font-size: 0.9rem; width: 100%; text-align: center; }
     input[type="text"] { text-align: left; }
     input:focus { border-color: var(--accent); outline: none; }
 
     .btn { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; font-size: 0.95rem; margin-top: 8px; }
     .btn:active { opacity: 0.8; }
-    .btn-secondary { background: #2a2a2a; color: var(--text-dim); border: 1px solid var(--card-border); margin-top: 4px; }
+    .btn-secondary { background: var(--card); color: var(--text-dim); border: 1px solid var(--card-border); margin-top: 4px; }
     .btn-del { background: transparent; color: var(--danger); font-size: 1.2rem; border: none; height: 36px; cursor: pointer; }
     .btn-delete-log { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
 
     /* Calendar Styling */
     .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .cal-header button { background: #2a2a2a; border: 1px solid var(--card-border); color: var(--text); padding: 6px 12px; border-radius: 6px; font-weight: bold; }
+    .cal-header button { background: var(--bg); border: 1px solid var(--card-border); color: var(--text); padding: 6px 12px; border-radius: 6px; font-weight: bold; }
     .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
     .cal-day-label { font-size: 0.75rem; color: var(--text-dim); font-weight: bold; padding-bottom: 4px; }
-    .cal-day { background: #2a2a2a; border-radius: 8px; padding: 10px 0; font-size: 0.85rem; font-weight: 600; cursor: pointer; position: relative; border: 1px solid transparent; }
+    .cal-day { background: var(--bg); border-radius: 8px; padding: 10px 0; font-size: 0.85rem; font-weight: 600; cursor: pointer; position: relative; border: 1px solid transparent; }
     .cal-day.empty { background: transparent; cursor: default; }
-    .cal-day.has-workout { background: #2e1f47; border-color: var(--accent); color: var(--accent); font-weight: bold; }
+    .cal-day.has-workout { background: var(--card); border-color: var(--accent); color: var(--accent); font-weight: bold; }
     .cal-day.has-workout::after { content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; background: var(--accent); border-radius: 50%; }
-    .cal-day.selected { border-color: #fff !important; }
+    .cal-day.selected { border-color: var(--text) !important; }
 
     /* Timer Bar */
-    .timer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1f1f1f; border-top: 1px solid var(--card-border); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+    .timer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--card-border); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
     .timer-display { font-size: 1.2rem; font-weight: bold; color: var(--success); font-family: monospace; }
-    .timer-btn { background: var(--card-border); color: var(--text); border: none; padding: 8px 14px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; }
+    .timer-btn { background: var(--bg); color: var(--text); border: 1px solid var(--card-border); padding: 8px 14px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; }
     
     /* Alarm Active State */
     .timer-bar.alarm-active { background: #b00020; animation: pulse 0.8s infinite alternate; }
@@ -83,7 +122,14 @@
 <body>
 
   <header>
-    <h1>GYM TRACKER</h1>
+    <h1>Jacked.</h1>
+    <!-- Theme Switcher Menu -->
+    <select class="theme-select" id="themeSelect" onchange="changeTheme(this.value)">
+      <option value="purple">Neon Purple</option>
+      <option value="amoled">AMOLED Cyan</option>
+      <option value="slate">Slate Blue</option>
+      <option value="forest">Forest Green</option>
+    </select>
   </header>
 
   <!-- Navigation Tabs -->
@@ -119,6 +165,19 @@
     let calDate = new Date();
     let selectedCalDateStr = null;
 
+    /* --- THEME MANAGEMENT --- */
+    function applySavedTheme() {
+      const savedTheme = localStorage.getItem('gt_theme') || 'purple';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      const themeSelect = document.getElementById('themeSelect');
+      if (themeSelect) themeSelect.value = savedTheme;
+    }
+
+    function changeTheme(themeName) {
+      document.documentElement.setAttribute('data-theme', themeName);
+      localStorage.setItem('gt_theme', themeName);
+    }
+
     function getExercises() {
       const saved = localStorage.getItem('gt_single_routine');
       return saved ? JSON.parse(saved) : defaultExercises;
@@ -131,7 +190,6 @@
       render();
     }
 
-    // Dynamic Helper to build individual exercise card HTML template
     function buildExerciseCardHTML(ex) {
       return `
         <div class="card exercise-card-item" data-exercise-name="${ex}">
@@ -144,7 +202,6 @@
           </div>
           <div class="set-row">
             <input type="text" value="Set 1" readonly>
-            <!-- step="any" allows decimal weights like 11.8, 12.5 -->
             <input type="number" step="any" name="${ex}_w1" placeholder="0">
             <input type="number" step="any" name="${ex}_r1" placeholder="0">
           </div>
@@ -298,7 +355,6 @@
       exercises.push(name);
       localStorage.setItem('gt_single_routine', JSON.stringify(exercises));
 
-      // Append directly to current screen DOM so existing inputs are preserved
       const listContainer = document.getElementById('exerciseCardsList');
       if (listContainer) {
         listContainer.insertAdjacentHTML('beforeend', buildExerciseCardHTML(name));
@@ -307,16 +363,14 @@
       }
     }
 
-    // Direct DOM Deletion Fix: Removes card directly from page without re-rendering form
     function removeExerciseCard(buttonElem, exName) {
       if (!confirm(`Remove "${exName}" from this workout?`)) return;
 
       const card = buttonElem.closest('.card');
       if (card) {
-        card.remove(); // Removes ONLY this card node from the DOM
+        card.remove();
       }
 
-      // Also update saved routine template in localStorage
       const exercises = getExercises();
       const updatedExercises = exercises.filter(ex => ex !== exName);
       localStorage.setItem('gt_single_routine', JSON.stringify(updatedExercises));
@@ -337,7 +391,6 @@
         entries: []
       };
 
-      // Gather from active cards on the screen dynamically
       document.querySelectorAll('.exercise-card-item').forEach(card => {
         const ex = card.getAttribute('data-exercise-name');
         const sets = [];
@@ -398,12 +451,12 @@
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Pitch A5
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
         gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.2); // 200ms beep length
+        osc.stop(audioCtx.currentTime + 0.2);
       } catch (e) {
         console.log("Audio play prevented:", e);
       }
@@ -487,6 +540,8 @@
       document.getElementById('timerText').innerText = `${mins}:${secs}`;
     }
 
+    // Initialize App and Theme
+    applySavedTheme();
     render();
   </script>
 </body>
