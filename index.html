@@ -134,7 +134,6 @@
 
     header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--card-border); padding-bottom: 12px; }
     
-    /* Interactive Refresh Logo Button & Animation */
     h1 { 
       font-size: 1.6rem; 
       color: var(--accent); 
@@ -184,7 +183,7 @@
     .date-picker-card label { font-size: 0.9rem; color: var(--accent); font-weight: 600; }
     .date-picker-card input[type="date"] { background: var(--bg); border: 1px solid var(--card-border); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; text-align: center; width: auto; color-scheme: dark; }
 
-    .set-row { display: grid; grid-template-columns: 2fr 1fr 1fr 40px; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .set-row { display: grid; grid-template-columns: 2fr 1fr 1fr 30px; gap: 8px; align-items: center; margin-bottom: 8px; }
     input, select { background: var(--bg); border: 1px solid var(--card-border); color: #fff; padding: 8px; border-radius: 8px; font-size: 0.9rem; width: 100%; text-align: center; }
     input[type="text"] { text-align: left; }
     input:focus, select:focus { border-color: var(--accent); outline: none; }
@@ -196,7 +195,6 @@
     .btn-action-log { background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-left: 6px; }
     .btn-delete-log { color: var(--danger); border-color: var(--danger); }
 
-    /* Modal Popup Overlay for Exercise Selection */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -224,7 +222,6 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
 
-    /* Modernized Calendar */
     .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
     .cal-header button { background: var(--bg); border: 1px solid var(--card-border); color: var(--text); padding: 6px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; }
     .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
@@ -250,7 +247,6 @@
     .cal-day.has-workout::after { content: ''; display: block; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; margin-top: 3px; }
     .cal-day.selected { border-color: var(--accent) !important; background: rgba(255, 255, 255, 0.05); }
 
-    /* Calendar Day Inspector Card */
     .inspector-card {
       background: var(--card);
       border: 1px solid var(--accent);
@@ -264,8 +260,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Chart Canvas */
-    .chart-container { width: 100%; height: 180px; margin-top: 10px; }
+    .chart-container { width: 100%; height: 180px; margin-top: 10px; position: relative; }
     canvas { width: 100% !important; height: 100% !important; }
 
     .history-item { border-bottom: 1px solid var(--card-border); padding: 10px 0; }
@@ -305,7 +300,6 @@
       
       <label style="font-size:0.8rem; color:var(--text-dim); display:block; margin-bottom:6px;">Choose Existing or New:</label>
       <select id="exerciseSelectDropdown" style="text-align:left; padding:10px; margin-bottom:12px;" onchange="handleModalDropdownChange(this.value)">
-        <!-- Options dynamically populated in JS -->
       </select>
 
       <div id="customExerciseInputGroup" style="display:none; margin-bottom:12px;">
@@ -328,12 +322,11 @@
     let selectedCalDateStr = null;
     let editingLogId = null;
 
-    /* --- REFRESH FUNCTION WITH VISUAL ANIMATION --- */
     function refreshApp() {
       const logo = document.getElementById('appLogo');
       if (logo) {
         logo.classList.remove('refreshing');
-        void logo.offsetWidth; // Force CSS reflow
+        void logo.offsetWidth;
         logo.classList.add('refreshing');
       }
 
@@ -342,17 +335,22 @@
       }, 250);
     }
 
-    /* --- THEME MANAGEMENT --- */
     function applySavedTheme() {
       const savedTheme = localStorage.getItem('gt_theme') || 'purple';
-      document.documentElement.setAttribute('data-theme', savedTheme);
-      const themeSelect = document.getElementById('themeSelect');
-      if (themeSelect) themeSelect.value = savedTheme;
+      changeTheme(savedTheme);
     }
 
     function changeTheme(themeName) {
       document.documentElement.setAttribute('data-theme', themeName);
       localStorage.setItem('gt_theme', themeName);
+      
+      const themeSelect = document.getElementById('themeSelect');
+      if (themeSelect) themeSelect.value = themeName;
+
+      const bgHex = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+      const themeMeta = document.querySelector('meta[name="theme-color"]');
+      if (themeMeta && bgHex) themeMeta.setAttribute('content', bgHex);
+
       if (currentTab === 'progress') renderChart();
     }
 
@@ -369,7 +367,7 @@
           if (e.exercise) list.add(e.exercise);
         });
       });
-      return Array.from(list);
+      return Array.from(list).sort((a, b) => a.localeCompare(b));
     }
 
     function switchTab(tab, evt) {
@@ -387,13 +385,49 @@
       render();
     }
 
-    function buildExerciseCardHTML(ex, initialValues = {}) {
-      const w1 = initialValues.w1 || '';
-      const r1 = initialValues.r1 || '';
-      const w2 = initialValues.w2 || '';
-      const r2 = initialValues.r2 || '';
-      const w3 = initialValues.w3 || '';
-      const r3 = initialValues.r3 || '';
+    function buildSetRowHTML(ex, setNum, valW = '', valR = '') {
+      return `
+        <div class="set-row" data-set-index="${setNum}">
+          <input type="text" value="Set ${setNum}" readonly>
+          <input type="number" step="any" name="${ex}_w${setNum}" placeholder="0" value="${valW}">
+          <input type="number" step="any" name="${ex}_r${setNum}" placeholder="0" value="${valR}">
+          <button type="button" class="btn-del" style="font-size:0.9rem;" onclick="removeSetRow(this)">✕</button>
+        </div>
+      `;
+    }
+
+    function addSetRow(btnElem, ex) {
+      const card = btnElem.closest('.exercise-card-item');
+      const rowsContainer = card.querySelector('.sets-rows-container');
+      const currentCount = rowsContainer.querySelectorAll('.set-row').length;
+      const nextNum = currentCount + 1;
+      rowsContainer.insertAdjacentHTML('beforeend', buildSetRowHTML(ex, nextNum));
+    }
+
+    function removeSetRow(btnElem) {
+      const row = btnElem.closest('.set-row');
+      const rowsContainer = row.parentElement;
+      row.remove();
+      
+      // Re-index set labels
+      const rows = rowsContainer.querySelectorAll('.set-row');
+      rows.forEach((r, idx) => {
+        const labelInput = r.querySelector('input[type="text"]');
+        if (labelInput) labelInput.value = `Set ${idx + 1}`;
+      });
+    }
+
+    function buildExerciseCardHTML(ex, setsArray = []) {
+      let rowsHTML = '';
+      if (setsArray.length > 0) {
+        setsArray.forEach((s, idx) => {
+          rowsHTML += buildSetRowHTML(ex, idx + 1, s.weight, s.reps);
+        });
+      } else {
+        rowsHTML += buildSetRowHTML(ex, 1);
+        rowsHTML += buildSetRowHTML(ex, 2);
+        rowsHTML += buildSetRowHTML(ex, 3);
+      }
 
       return `
         <div class="card exercise-card-item" data-exercise-name="${ex}">
@@ -401,27 +435,13 @@
             <span>${ex}</span>
             <button type="button" class="btn-del" onclick="removeExerciseCard(this, '${ex}')">✕</button>
           </div>
-          <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 40px; gap:8px; margin-bottom:6px; font-size:0.75rem; color:var(--text-dim);">
-            <span>Exercise / Set</span><span>Kg</span><span>Reps</span><span></span>
+          <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 30px; gap:8px; margin-bottom:6px; font-size:0.75rem; color:var(--text-dim);">
+            <span>Set</span><span>Kg</span><span>Reps</span><span></span>
           </div>
-          <div class="set-row">
-            <input type="text" value="Set 1" readonly>
-            <input type="number" step="any" name="${ex}_w1" placeholder="0" value="${w1}">
-            <input type="number" step="any" name="${ex}_r1" placeholder="0" value="${r1}">
-            <div></div>
+          <div class="sets-rows-container">
+            ${rowsHTML}
           </div>
-          <div class="set-row">
-            <input type="text" value="Set 2" readonly>
-            <input type="number" step="any" name="${ex}_w2" placeholder="0" value="${w2}">
-            <input type="number" step="any" name="${ex}_r2" placeholder="0" value="${r2}">
-            <div></div>
-          </div>
-          <div class="set-row">
-            <input type="text" value="Set 3" readonly>
-            <input type="number" step="any" name="${ex}_w3" placeholder="0" value="${w3}">
-            <input type="number" step="any" name="${ex}_r3" placeholder="0" value="${r3}">
-            <div></div>
-          </div>
+          <button type="button" class="btn btn-secondary" style="font-size:0.8rem; padding:6px; margin-top:4px;" onclick="addSetRow(this, '${ex}')">+ Add Set</button>
         </div>
       `;
     }
@@ -452,15 +472,7 @@
 
       if (editingLog) {
         editingLog.entries.forEach(entry => {
-          const vals = {
-            w1: entry.sets[0] ? entry.sets[0].weight : '',
-            r1: entry.sets[0] ? entry.sets[0].reps : '',
-            w2: entry.sets[1] ? entry.sets[1].weight : '',
-            r2: entry.sets[1] ? entry.sets[1].reps : '',
-            w3: entry.sets[2] ? entry.sets[2].weight : '',
-            r3: entry.sets[2] ? entry.sets[2].reps : ''
-          };
-          html += buildExerciseCardHTML(entry.exercise, vals);
+          html += buildExerciseCardHTML(entry.exercise, entry.sets);
         });
       } else {
         const exercises = getExercises();
@@ -495,7 +507,6 @@
       render();
     }
 
-    /* --- ADD EXERCISE MODAL LOGIC --- */
     function openExerciseModal() {
       const known = getAllKnownExercises();
       const dropdown = document.getElementById('exerciseSelectDropdown');
@@ -568,7 +579,6 @@
       closeExerciseModal();
     }
 
-    /* --- PROGRESS TAB --- */
     function renderProgress(container) {
       const history = JSON.parse(localStorage.getItem('ns_history') || '[]');
       
@@ -576,7 +586,7 @@
       history.forEach(session => {
         session.entries.forEach(e => { if (e.exercise) exercisesSet.add(e.exercise); });
       });
-      const uniqueExercises = Array.from(exercisesSet);
+      const uniqueExercises = Array.from(exercisesSet).sort((a,b) => a.localeCompare(b));
 
       let html = `
         <div class="card">
@@ -660,12 +670,14 @@
 
       const ctx = canvas.getContext('2d');
       const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * window.devicePixelRatio;
-      canvas.height = rect.height * window.devicePixelRatio;
+      
+      // Fix canvas scale blowout issue
+      canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+      canvas.height = canvas.offsetHeight * window.devicePixelRatio;
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
-      const w = rect.width;
-      const h = rect.height;
+      const w = canvas.offsetWidth;
+      const h = canvas.offsetHeight;
       ctx.clearRect(0, 0, w, h);
 
       if (!selectedEx) {
@@ -795,9 +807,8 @@
 
     function saveWorkout(e) {
       e.preventDefault();
-      const formData = new FormData(e.target);
       
-      const rawDate = formData.get('workoutDate');
+      const rawDate = document.getElementById('workoutDate').value;
       const selectedDate = new Date(rawDate + 'T00:00:00');
       const formattedDate = selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
@@ -811,11 +822,14 @@
       document.querySelectorAll('.exercise-card-item').forEach(card => {
         const ex = card.getAttribute('data-exercise-name');
         const sets = [];
-        for (let i = 1; i <= 3; i++) {
-          const w = formData.get(`${ex}_w${i}`);
-          const r = formData.get(`${ex}_r${i}`);
+        
+        card.querySelectorAll('.set-row').forEach(row => {
+          const inputs = row.querySelectorAll('input[type="number"]');
+          const w = inputs[0] ? inputs[0].value : '';
+          const r = inputs[1] ? inputs[1].value : '';
           if (w || r) sets.push({ weight: w || 0, reps: r || 0 });
-        }
+        });
+
         if (sets.length > 0) log.entries.push({ exercise: ex, sets });
       });
 
@@ -825,7 +839,6 @@
       }
 
       let history = JSON.parse(localStorage.getItem('ns_history') || '[]');
-      
       const wasEditing = Boolean(editingLogId);
 
       if (editingLogId) {
@@ -841,7 +854,6 @@
 
       alert(wasEditing ? "Workout updated!" : "Workout saved successfully!");
 
-      e.target.reset();
       switchTab('progress');
     }
 
