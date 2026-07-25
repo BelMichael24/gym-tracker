@@ -172,6 +172,34 @@
     .btn-action-log { background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-left: 6px; }
     .btn-delete-log { color: var(--danger); border-color: var(--danger); }
 
+    /* Modal Popup Overlay for Exercise Selection */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
     /* Modernized Calendar */
     .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
     .cal-header button { background: var(--bg); border: 1px solid var(--card-border); color: var(--text); padding: 6px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; }
@@ -244,6 +272,28 @@
 
   <div id="workoutContainer"></div>
 
+  <!-- Modal Popup for Adding/Selecting Exercise -->
+  <div id="addExerciseModal" class="modal-overlay">
+    <div class="modal-card">
+      <h3 style="color:var(--text); margin-bottom:12px; font-size:1.05rem;">Add Exercise</h3>
+      
+      <label style="font-size:0.8rem; color:var(--text-dim); display:block; margin-bottom:6px;">Choose Existing or New:</label>
+      <select id="exerciseSelectDropdown" style="text-align:left; padding:10px; margin-bottom:12px;" onchange="handleModalDropdownChange(this.value)">
+        <!-- Options dynamically populated in JS -->
+      </select>
+
+      <div id="customExerciseInputGroup" style="display:none; margin-bottom:12px;">
+        <label style="font-size:0.8rem; color:var(--text-dim); display:block; margin-bottom:6px;">New Exercise Name:</label>
+        <input type="text" id="customExerciseInput" placeholder="e.g. Pull ups" style="text-align:left; padding:10px;">
+      </div>
+
+      <div style="display:flex; gap:8px; margin-top:16px;">
+        <button type="button" class="btn btn-secondary" style="margin-top:0;" onclick="closeExerciseModal()">Cancel</button>
+        <button type="button" class="btn" style="margin-top:0;" onclick="confirmAddExercise()">Add</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const defaultExercises = ["Bench Press", "Barbell Squat", "Barbell Row", "Overhead Press"];
 
@@ -283,6 +333,18 @@
     function getExercises() {
       const saved = localStorage.getItem('gt_single_routine');
       return saved ? JSON.parse(saved) : defaultExercises;
+    }
+
+    /* Helper: Combines active exercise list with past history names so nothing is lost */
+    function getAllKnownExercises() {
+      const list = new Set(getExercises());
+      const history = JSON.parse(localStorage.getItem('ns_history') || '[]');
+      history.forEach(session => {
+        session.entries.forEach(e => {
+          if (e.exercise) list.add(e.exercise);
+        });
+      });
+      return Array.from(list);
     }
 
     function switchTab(tab, evt) {
@@ -384,7 +446,7 @@
 
       html += `
         </div>
-        <button type="button" class="btn btn-secondary" onclick="addExercise()">+ Add Exercise</button>
+        <button type="button" class="btn btn-secondary" onclick="openExerciseModal()">+ Add Exercise</button>
         <button type="submit" class="btn" style="margin-top:16px;">${editingLog ? 'Update Workout' : 'Finish & Save Workout'}</button>
         ${editingLog ? `<button type="button" class="btn btn-secondary" style="margin-top:8px; color:var(--danger);" onclick="cancelEdit()">Cancel Edit</button>` : ''}
       </form>`;
@@ -406,6 +468,80 @@
       calDate.setMonth(calDate.getMonth() + offset);
       selectedCalDateStr = null;
       render();
+    }
+
+    /* --- ADD EXERCISE MODAL LOGIC --- */
+    function openExerciseModal() {
+      const known = getAllKnownExercises();
+      const dropdown = document.getElementById('exerciseSelectDropdown');
+      
+      let optionsHTML = `<option value="__NEW__">+ Create New Exercise</option>`;
+      if (known.length > 0) {
+        optionsHTML += `<optgroup label="Select Previously Used">`;
+        known.forEach(ex => {
+          optionsHTML += `<option value="${ex}">${ex}</option>`;
+        });
+        optionsHTML += `</optgroup>`;
+      }
+
+      dropdown.innerHTML = optionsHTML;
+      dropdown.value = known.length > 0 ? known[0] : '__NEW__';
+      handleModalDropdownChange(dropdown.value);
+
+      document.getElementById('customExerciseInput').value = '';
+      document.getElementById('addExerciseModal').classList.add('active');
+    }
+
+    function closeExerciseModal() {
+      document.getElementById('addExerciseModal').classList.remove('active');
+    }
+
+    function handleModalDropdownChange(val) {
+      const group = document.getElementById('customExerciseInputGroup');
+      if (val === '__NEW__') {
+        group.style.display = 'block';
+        document.getElementById('customExerciseInput').focus();
+      } else {
+        group.style.display = 'none';
+      }
+    }
+
+    function confirmAddExercise() {
+      const dropdownVal = document.getElementById('exerciseSelectDropdown').value;
+      let name = '';
+
+      if (dropdownVal === '__NEW__') {
+        name = document.getElementById('customExerciseInput').value.trim();
+        if (!name) {
+          alert('Please enter an exercise name.');
+          return;
+        }
+      } else {
+        name = dropdownVal;
+      }
+
+      // Check if card is already currently displayed in workout view to prevent duplicates in same session
+      const existingCard = document.querySelector(`.exercise-card-item[data-exercise-name="${name}"]`);
+      if (existingCard) {
+        alert(`"${name}" is already in this workout card list.`);
+        closeExerciseModal();
+        return;
+      }
+
+      const exercises = getExercises();
+      if (!exercises.includes(name)) {
+        exercises.push(name);
+        localStorage.setItem('gt_single_routine', JSON.stringify(exercises));
+      }
+
+      const listContainer = document.getElementById('exerciseCardsList');
+      if (listContainer) {
+        listContainer.insertAdjacentHTML('beforeend', buildExerciseCardHTML(name));
+      } else {
+        render();
+      }
+
+      closeExerciseModal();
     }
 
     /* --- PROGRESS TAB --- */
@@ -622,23 +758,6 @@
       });
       html += `</div>`;
       return html;
-    }
-
-    function addExercise() {
-      const name = prompt("Enter Exercise Name:");
-      if (!name) return;
-      const exercises = getExercises();
-      if (!exercises.includes(name)) {
-        exercises.push(name);
-        localStorage.setItem('gt_single_routine', JSON.stringify(exercises));
-      }
-
-      const listContainer = document.getElementById('exerciseCardsList');
-      if (listContainer) {
-        listContainer.insertAdjacentHTML('beforeend', buildExerciseCardHTML(name));
-      } else {
-        render();
-      }
     }
 
     function removeExerciseCard(buttonElem, exName) {
