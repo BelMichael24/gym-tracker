@@ -57,7 +57,6 @@
       --success: #5cdb95;
     }
 
-    /* COLORFUL THEMES */
     [data-theme="amber"] {
       --bg: #14110f;
       --card: #211c18;
@@ -106,18 +105,17 @@
       --success: #20e070;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding: 16px; -webkit-tap-highlight-color: transparent; transition: background-color 0.2s ease, color 0.2s ease; }
 
     header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--card-border); padding-bottom: 12px; }
     h1 { font-size: 1.6rem; color: var(--accent); font-weight: 800; letter-spacing: -0.5px; }
 
-    /* Theme Switcher Dropdown Styling */
     .theme-select { 
       background: var(--card); 
       color: var(--accent); 
       border: 1px solid var(--card-border); 
-      padding: 6px 8px; 
+      padding: 6px 10px; 
       border-radius: 8px; 
       font-size: 0.8rem; 
       font-weight: 600; 
@@ -128,38 +126,67 @@
     }
 
     .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; }
-    .tab-btn { flex: 1; background: var(--card); border: 1px solid var(--card-border); color: var(--text-dim); padding: 10px 4px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; text-align: center; white-space: nowrap; cursor: pointer; }
+    .tab-btn { flex: 1; background: var(--card); border: 1px solid var(--card-border); color: var(--text-dim); padding: 10px 4px; border-radius: 10px; font-weight: 600; font-size: 0.85rem; text-align: center; white-space: nowrap; cursor: pointer; transition: all 0.2s ease; }
     .tab-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
 
-    .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; margin-bottom: 16px; transition: background-color 0.2s ease, border-color 0.2s ease; }
-    .card-title { font-size: 1.1rem; margin-bottom: 12px; color: var(--text); display: flex; justify-content: space-between; align-items: center; }
+    .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 14px; padding: 16px; margin-bottom: 16px; transition: background-color 0.2s ease, border-color 0.2s ease; }
+    .card-title { font-size: 1.05rem; margin-bottom: 12px; color: var(--text); display: flex; justify-content: space-between; align-items: center; font-weight: 700; letter-spacing: -0.2px; }
     
     .date-picker-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
     .date-picker-card label { font-size: 0.9rem; color: var(--accent); font-weight: 600; }
-    .date-picker-card input[type="date"] { background: var(--bg); border: 1px solid var(--card-border); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; text-align: center; width: auto; color-scheme: dark; }
+    .date-picker-card input[type="date"] { background: var(--bg); border: 1px solid var(--card-border); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; text-align: center; width: auto; color-scheme: dark; }
 
     .set-row { display: grid; grid-template-columns: 2fr 1fr 1fr 40px; gap: 8px; align-items: center; margin-bottom: 8px; }
-    input, select { background: var(--bg); border: 1px solid var(--card-border); color: #fff; padding: 8px; border-radius: 6px; font-size: 0.9rem; width: 100%; text-align: center; }
+    input, select { background: var(--bg); border: 1px solid var(--card-border); color: #fff; padding: 8px; border-radius: 8px; font-size: 0.9rem; width: 100%; text-align: center; }
     input[type="text"] { text-align: left; }
     input:focus, select:focus { border-color: var(--accent); outline: none; }
 
-    .btn { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; font-size: 0.95rem; margin-top: 8px; cursor: pointer; }
-    .btn:active { opacity: 0.8; }
+    .btn { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: bold; width: 100%; font-size: 0.95rem; margin-top: 8px; cursor: pointer; transition: opacity 0.15s ease; }
+    .btn:active { opacity: 0.85; }
     .btn-secondary { background: var(--card); color: var(--text-dim); border: 1px solid var(--card-border); margin-top: 4px; }
     .btn-del { background: transparent; color: var(--danger); font-size: 1.2rem; border: none; height: 36px; cursor: pointer; }
-    .btn-action-log { background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-left: 6px; }
+    .btn-action-log { background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-left: 6px; }
     .btn-delete-log { color: var(--danger); border-color: var(--danger); }
 
-    /* Calendar Styling */
-    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .cal-header button { background: var(--bg); border: 1px solid var(--card-border); color: var(--text); padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    /* Modernized Calendar */
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .cal-header button { background: var(--bg); border: 1px solid var(--card-border); color: var(--text); padding: 6px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; }
     .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
-    .cal-day-label { font-size: 0.75rem; color: var(--text-dim); font-weight: bold; padding-bottom: 4px; }
-    .cal-day { background: var(--bg); border-radius: 8px; padding: 10px 0; font-size: 0.85rem; font-weight: 600; cursor: pointer; position: relative; border: 1px solid transparent; }
+    .cal-day-label { font-size: 0.75rem; color: var(--text-dim); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 6px; }
+    .cal-day { 
+      background: var(--bg); 
+      border-radius: 10px; 
+      padding: 12px 0; 
+      font-size: 0.85rem; 
+      font-weight: 600; 
+      cursor: pointer; 
+      position: relative; 
+      border: 1px solid transparent; 
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+    }
     .cal-day.empty { background: transparent; cursor: default; }
-    .cal-day.has-workout { background: var(--card); border-color: var(--accent); color: var(--accent); font-weight: bold; }
-    .cal-day.has-workout::after { content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; background: var(--accent); border-radius: 50%; }
-    .cal-day.selected { border-color: var(--text) !important; }
+    .cal-day.has-workout { background: var(--card); border-color: var(--card-border); color: var(--text); font-weight: 700; }
+    .cal-day.has-workout::after { content: ''; display: block; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; margin-top: 3px; }
+    .cal-day.selected { border-color: var(--accent) !important; background: rgba(255, 255, 255, 0.05); }
+
+    /* Calendar Day Inspector Card */
+    .inspector-card {
+      background: var(--card);
+      border: 1px solid var(--accent);
+      border-radius: 14px;
+      padding: 16px;
+      margin-top: 12px;
+      animation: fadeIn 0.2s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     /* Chart Canvas */
     .chart-container { width: 100%; height: 180px; margin-top: 10px; }
@@ -167,14 +194,13 @@
 
     .history-item { border-bottom: 1px solid var(--card-border); padding: 10px 0; }
     .history-item:last-child { border-bottom: none; }
-    .history-date { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 4px; }
+    .history-date { font-size: 0.75rem; color: var(--text-dim); margin-top: 2px; }
   </style>
 </head>
 <body>
 
   <header>
     <h1>Jacked.</h1>
-    <!-- Theme Switcher Menu -->
     <select class="theme-select" id="themeSelect" onchange="changeTheme(this.value)">
       <option value="purple">Neon Purple</option>
       <option value="amoled">AMOLED Cyan</option>
@@ -187,13 +213,11 @@
     </select>
   </header>
 
-  <!-- Navigation Tabs -->
   <div class="nav-tabs">
     <button class="tab-btn active" id="tabWorkoutBtn" onclick="switchTab('workout', event)">Log Workout</button>
     <button class="tab-btn" id="tabProgressBtn" onclick="switchTab('progress', event)">Progress</button>
   </div>
 
-  <!-- Dynamic Content Container -->
   <div id="workoutContainer"></div>
 
   <script>
@@ -202,7 +226,7 @@
     let currentTab = 'workout';
     let calDate = new Date();
     let selectedCalDateStr = null;
-    let editingLogId = null; // Tracks if we are editing an existing log
+    let editingLogId = null;
 
     /* --- THEME MANAGEMENT --- */
     function applySavedTheme() {
@@ -234,7 +258,6 @@
         if (targetBtn) targetBtn.classList.add('active');
       }
       
-      // Reset edit state if user manually switches tabs without saving
       if (tab === 'progress') editingLogId = null; 
       render();
     }
@@ -303,7 +326,6 @@
       `;
 
       if (editingLog) {
-        // Render exercises belonging to the log being edited
         editingLog.entries.forEach(entry => {
           const vals = {
             w1: entry.sets[0] ? entry.sets[0].weight : '',
@@ -316,7 +338,6 @@
           html += buildExerciseCardHTML(entry.exercise, vals);
         });
       } else {
-        // Standard blank entry form
         const exercises = getExercises();
         exercises.forEach((ex) => {
           html += buildExerciseCardHTML(ex);
@@ -345,14 +366,14 @@
 
     function changeMonth(offset) {
       calDate.setMonth(calDate.getMonth() + offset);
+      selectedCalDateStr = null;
       render();
     }
 
-    /* --- UNIFIED PROGRESS TAB --- */
+    /* --- PROGRESS TAB --- */
     function renderProgress(container) {
       const history = JSON.parse(localStorage.getItem('ns_history') || '[]');
       
-      // Collect unique exercises
       const exercisesSet = new Set();
       history.forEach(session => {
         session.entries.forEach(e => { if (e.exercise) exercisesSet.add(e.exercise); });
@@ -373,17 +394,12 @@
           </div>
         </div>
 
-        <!-- Monthly Calendar Grid -->
+        <!-- Monthly Calendar Grid & Inspector -->
         ${renderCalendarHTML(history)}
-
-        <!-- History List -->
-        <div class="card-title" style="margin-top:20px; font-size:1.1rem; color:var(--text);">Workout Logs</div>
-        <div id="historyList"></div>
       `;
 
       container.innerHTML = html;
       renderChart();
-      renderHistoryItems(history);
     }
 
     function renderCalendarHTML(history) {
@@ -403,7 +419,7 @@
         <div class="card">
           <div class="cal-header">
             <button type="button" onclick="changeMonth(-1)">‹</button>
-            <strong style="color:var(--accent);">${monthName}</strong>
+            <strong style="color:var(--accent); font-size:1rem; font-weight:700;">${monthName}</strong>
             <button type="button" onclick="changeMonth(1)">›</button>
           </div>
           <div class="cal-grid">
@@ -424,7 +440,7 @@
         const hasWorkout = workoutDates[dateKey] ? 'has-workout' : '';
         const isSelected = selectedCalDateStr === dateKey ? 'selected' : '';
 
-        html += `<div class="cal-day ${hasWorkout} ${isSelected}" onclick="inspectCalDate('${dateKey}')">${day}</div>`;
+        html += `<div class="cal-day ${hasWorkout} ${isSelected}" onclick="inspectCalDate('${dateKey}')"><span>${day}</span></div>`;
       }
 
       html += `</div></div>`;
@@ -433,7 +449,7 @@
       if (selectedCalDateStr && workoutDates[selectedCalDateStr]) {
         html += renderSingleWorkoutCard(workoutDates[selectedCalDateStr]);
       } else if (selectedCalDateStr) {
-        html += `<div class="card"><p style="color:var(--text-dim); text-align:center;">No workout logged for this date.</p></div>`;
+        html += `<div class="card" style="text-align:center; padding: 20px 16px;"><p style="color:var(--text-dim); font-size:0.9rem;">No workout logged for this date.</p></div>`;
       }
       html += `</div>`;
 
@@ -510,14 +526,12 @@
       const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#bb86fc';
       const dimColor = getComputedStyle(document.documentElement).getPropertyValue('--card-border').trim() || '#2e2e2e';
 
-      // Draw Grid Line
       ctx.strokeStyle = dimColor;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(padL, h - padB); ctx.lineTo(w - padR, h - padB);
       ctx.stroke();
 
-      // Draw Line Chart
       ctx.strokeStyle = accentColor;
       ctx.lineWidth = 2.5;
       ctx.beginPath();
@@ -527,7 +541,6 @@
       });
       ctx.stroke();
 
-      // Draw Data Nodes
       points.forEach((pt, i) => {
         const x = getX(i), y = getY(pt.val);
         ctx.fillStyle = accentColor;
@@ -550,10 +563,10 @@
 
     function renderSingleWorkoutCard(item) {
       let html = `
-        <div class="card">
+        <div class="inspector-card">
           <div class="card-title">
             <div>
-              <span>WORKOUT SESSION</span>
+              <span style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.8px; color:var(--accent);">WORKOUT SESSION</span>
               <div class="history-date">${item.date}</div>
             </div>
             <div>
@@ -565,7 +578,7 @@
         const setStr = entry.sets.map(s => `${s.weight}kg × ${s.reps}`).join(' | ');
         html += `
           <div class="history-item">
-            <strong style="font-size:0.9rem; color:var(--accent);">${entry.exercise}</strong>
+            <strong style="font-size:0.9rem; color:var(--text);">${entry.exercise}</strong>
             <div style="font-size:0.85rem; color:var(--text-dim); margin-top:2px;">${setStr}</div>
           </div>`;
       });
@@ -594,7 +607,6 @@
       const card = buttonElem.closest('.card');
       if (card) card.remove();
 
-      // Only delete from global routine if not editing a historical log
       if (!editingLogId) {
         const exercises = getExercises();
         const updatedExercises = exercises.filter(ex => ex !== exName);
@@ -636,12 +648,10 @@
       let history = JSON.parse(localStorage.getItem('ns_history') || '[]');
       
       if (editingLogId) {
-        // Update existing entry in-place
         const index = history.findIndex(item => item.id === editingLogId);
         if (index !== -1) history[index] = log;
         editingLogId = null;
       } else {
-        // Add new entry
         history.push(log);
       }
 
@@ -656,22 +666,8 @@
       let history = JSON.parse(localStorage.getItem('ns_history') || '[]');
       history = history.filter(item => item.id !== id);
       localStorage.setItem('ns_history', JSON.stringify(history));
+      selectedCalDateStr = null;
       render();
-    }
-
-    function renderHistoryItems(history) {
-      const container = document.getElementById('historyList');
-      if (!container) return;
-      if (history.length === 0) {
-        container.innerHTML = `<div class="card"><p style="color:var(--text-dim); text-align:center;">No logged workouts yet.</p></div>`;
-        return;
-      }
-
-      let html = '';
-      history.forEach(item => {
-        html += renderSingleWorkoutCard(item);
-      });
-      container.innerHTML = html;
     }
 
     // Initialize App and Theme
