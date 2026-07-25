@@ -9,40 +9,16 @@
   <title>Jacked.</title>
   <style>
     /* Theme Definitions via CSS Variables */
-    :root, [data-theme="purple"] {
-      --bg: #121212;
-      --card: #1e1e1e;
-      --card-border: #2e2e2e;
-      --accent: #bb86fc;
-      --accent-hover: #9955e8;
-      --text: #ffffff;
-      --text-dim: #a0a0a0;
-      --danger: #cf6679;
-      --success: #03dac6;
-    }
-
-    [data-theme="orange"] {
-      --bg: #110d0a;
-      --card: #1e1713;
-      --card-border: #33261f;
-      --accent: #ff6600;
-      --accent-hover: #e05500;
-      --text: #ffffff;
-      --text-dim: #b89c8a;
+    :root, [data-theme="amber"] {
+      --bg: #14110f;
+      --card: #211c18;
+      --card-border: #332b24;
+      --accent: #ffb703;
+      --accent-hover: #fb8500;
+      --text: #fffaf0;
+      --text-dim: #b39d82;
       --danger: #ff4d4d;
-      --success: #ff9900;
-    }
-
-    [data-theme="frost"] {
-      --bg: #0b1319;
-      --card: #13212b;
-      --card-border: #203545;
-      --accent: #00f2fe;
-      --accent-hover: #00c6ff;
-      --text: #f0f9ff;
-      --text-dim: #84a2b8;
-      --danger: #ff5252;
-      --success: #00e676;
+      --success: #ffb703;
     }
 
     [data-theme="amoled"] {
@@ -57,52 +33,16 @@
       --success: #00e676;
     }
 
-    [data-theme="slate"] {
-      --bg: #1a1d24;
-      --card: #222733;
-      --card-border: #31384a;
-      --accent: #64b5f6;
-      --accent-hover: #42a5f5;
-      --text: #e2e8f0;
-      --text-dim: #94a3b8;
-      --danger: #e57373;
-      --success: #81c784;
-    }
-
-    [data-theme="forest"] {
-      --bg: #101915;
-      --card: #17241e;
-      --card-border: #24382f;
-      --accent: #5cdb95;
-      --accent-hover: #38b000;
-      --text: #edf5e1;
-      --text-dim: #8ee4af;
-      --danger: #ff6b6b;
-      --success: #5cdb95;
-    }
-
-    [data-theme="amber"] {
-      --bg: #14110f;
-      --card: #211c18;
-      --card-border: #332b24;
-      --accent: #ffb703;
-      --accent-hover: #fb8500;
-      --text: #fffaf0;
-      --text-dim: #b39d82;
-      --danger: #ff4d4d;
-      --success: #ffb703;
-    }
-
-    [data-theme="sunset"] {
-      --bg: #1a161b;
-      --card: #261f28;
-      --card-border: #3d2f40;
-      --accent: #ff758f;
-      --accent-hover: #ff4d6d;
-      --text: #fff0f3;
-      --text-dim: #b892a0;
-      --danger: #ff0054;
-      --success: #70e000;
+    [data-theme="crimson"] {
+      --bg: #150d0e;
+      --card: #221416;
+      --card-border: #381f23;
+      --accent: #ff2a4b;
+      --accent-hover: #d61c38;
+      --text: #ffffff;
+      --text-dim: #a88287;
+      --danger: #ff0033;
+      --success: #20e070;
     }
 
     [data-theme="dracula"] {
@@ -117,16 +57,76 @@
       --success: #50fa7b;
     }
 
-    [data-theme="crimson"] {
-      --bg: #150d0e;
-      --card: #221416;
-      --card-border: #381f23;
-      --accent: #ff2a4b;
-      --accent-hover: #d61c38;
+    [data-theme="forest"] {
+      --bg: #101915;
+      --card: #17241e;
+      --card-border: #24382f;
+      --accent: #5cdb95;
+      --accent-hover: #38b000;
+      --text: #edf5e1;
+      --text-dim: #8ee4af;
+      --danger: #ff6b6b;
+      --success: #5cdb95;
+    }
+
+    [data-theme="frost"] {
+      --bg: #0b1319;
+      --card: #13212b;
+      --card-border: #203545;
+      --accent: #00f2fe;
+      --accent-hover: #00c6ff;
+      --text: #f0f9ff;
+      --text-dim: #84a2b8;
+      --danger: #ff5252;
+      --success: #00e676;
+    }
+
+    [data-theme="orange"] {
+      --bg: #110d0a;
+      --card: #1e1713;
+      --card-border: #33261f;
+      --accent: #ff6600;
+      --accent-hover: #e05500;
       --text: #ffffff;
-      --text-dim: #a88287;
-      --danger: #ff0033;
-      --success: #20e070;
+      --text-dim: #b89c8a;
+      --danger: #ff4d4d;
+      --success: #ff9900;
+    }
+
+    [data-theme="purple"] {
+      --bg: #121212;
+      --card: #1e1e1e;
+      --card-border: #2e2e2e;
+      --accent: #bb86fc;
+      --accent-hover: #9955e8;
+      --text: #ffffff;
+      --text-dim: #a0a0a0;
+      --danger: #cf6679;
+      --success: #03dac6;
+    }
+
+    [data-theme="slate"] {
+      --bg: #1a1d24;
+      --card: #222733;
+      --card-border: #31384a;
+      --accent: #64b5f6;
+      --accent-hover: #42a5f5;
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --danger: #e57373;
+      --success: #81c784;
+    }
+
+    [data-theme="sunset"] {
+      --bg: #1a161b;
+      --card: #261f28;
+      --card-border: #3d2f40;
+      --accent: #ff758f;
+      --accent-hover: #ff4d6d;
+      --text: #fff0f3;
+      --text-dim: #b892a0;
+      --danger: #ff0054;
+      --success: #70e000;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
@@ -273,16 +273,16 @@
   <header>
     <h1 id="appLogo" onclick="refreshApp()" title="Tap to refresh app">Jacked.</h1>
     <select class="theme-select" id="themeSelect" onchange="changeTheme(this.value)">
-      <option value="purple">Neon Purple</option>
-      <option value="orange">Cyber Orange</option>
-      <option value="frost">Nordic Frost</option>
-      <option value="amoled">AMOLED Cyan</option>
-      <option value="slate">Slate Blue</option>
-      <option value="forest">Forest Green</option>
       <option value="amber">Cyberpunk Amber</option>
-      <option value="sunset">Sunset Coral</option>
-      <option value="dracula">Dracula Pink</option>
+      <option value="amoled">AMOLED Cyan</option>
       <option value="crimson">Crimson Red</option>
+      <option value="dracula">Dracula Pink</option>
+      <option value="forest">Forest Green</option>
+      <option value="frost">Nordic Frost</option>
+      <option value="orange">Cyber Orange</option>
+      <option value="purple">Neon Purple</option>
+      <option value="slate">Slate Blue</option>
+      <option value="sunset">Sunset Coral</option>
     </select>
   </header>
 
@@ -671,7 +671,6 @@
       const ctx = canvas.getContext('2d');
       const rect = canvas.getBoundingClientRect();
       
-      // Fix canvas scale blowout issue
       canvas.width = canvas.offsetWidth * window.devicePixelRatio;
       canvas.height = canvas.offsetHeight * window.devicePixelRatio;
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
