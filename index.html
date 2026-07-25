@@ -9,31 +9,95 @@
       --bg: #121212;
       --card-bg: #1e1e1e;
       --accent: #ff4757;
+      --accent-hover: #ff6b81;
       --text: #ffffff;
       --subtext: #a0a0a0;
       --input-bg: #2a2a2a;
+      --border: #333333;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg);
       color: var(--text);
-      margin: 0;
       padding: 16px;
-      padding-bottom: 80px;
+      padding-bottom: 100px;
     }
 
-    h1 {
-      font-size: 1.5rem;
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 16px;
     }
 
+    h1 {
+      font-size: 1.4rem;
+    }
+
+    /* Date Picker Controls */
+    .date-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card-bg);
+      padding: 8px 12px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+
+    .date-container input[type="date"] {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+      width: 100%;
+    }
+
+    /* Timer Widget */
+    .timer-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid var(--border);
+    }
+
+    .timer-display {
+      font-size: 1.5rem;
+      font-weight: bold;
+      font-family: monospace;
+      color: var(--accent);
+    }
+
+    .timer-btn {
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    /* Exercise Cards */
     .exercise-card {
       background: var(--card-bg);
       border-radius: 12px;
       padding: 16px;
       margin-bottom: 16px;
       box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
     }
 
     .card-header {
@@ -84,14 +148,16 @@
     }
 
     .input-group label {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: var(--subtext);
       margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     input[type="number"] {
       background: var(--input-bg);
-      border: 1px solid transparent;
+      border: 1px solid var(--border);
       border-radius: 8px;
       color: var(--text);
       padding: 10px;
@@ -123,37 +189,90 @@
 </head>
 <body>
 
-  <h1>Workout Tracker</h1>
+  <header>
+    <h1>Gym Tracker</h1>
+  </header>
 
-  <div id="exercise-container">
-    <!-- Exercise cards will render here -->
+  <!-- Date Selection -->
+  <div class="date-container">
+    <input type="date" id="workout-date" onchange="loadWorkoutForSelectedDate()">
   </div>
+
+  <!-- Rest Timer Bar -->
+  <div class="timer-card">
+    <div>
+      <div style="font-size: 0.75rem; color: var(--subtext);">REST TIMER</div>
+      <div class="timer-display" id="timer-display">00:00</div>
+    </div>
+    <div style="display: flex; gap: 6px;">
+      <button class="timer-btn" onclick="startTimer(90)">90s</button>
+      <button class="timer-btn" onclick="startTimer(120)">2m</button>
+      <button class="timer-btn" onclick="resetTimer()">Reset</button>
+    </div>
+  </div>
+
+  <!-- Main Exercises List -->
+  <div id="exercise-container"></div>
 
   <button class="btn-add" onclick="addExercise()">+ Add Exercise</button>
 
   <script>
     const container = document.getElementById('exercise-container');
+    const dateInput = document.getElementById('workout-date');
+    let timerInterval = null;
 
-    // Create and append a new exercise card
+    // Set default date to Today
+    dateInput.valueAsDate = new Date();
+
+    function getStorageKey() {
+      return `gymTracker_workout_${dateInput.value}`;
+    }
+
+    // Timer Logic
+    function startTimer(seconds) {
+      clearInterval(timerInterval);
+      let remaining = seconds;
+      updateTimerDisplay(remaining);
+
+      timerInterval = setInterval(() => {
+        remaining--;
+        updateTimerDisplay(remaining);
+        if (remaining <= 0) {
+          clearInterval(timerInterval);
+          if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        }
+      }, 1000);
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      updateTimerDisplay(0);
+    }
+
+    function updateTimerDisplay(totalSeconds) {
+      const mins = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+      const secs = (totalSeconds % 60).toString().padStart(2, '0');
+      document.getElementById('timer-display').textContent = `${mins}:${secs}`;
+    }
+
+    // Card Builder
     function createCardElement(data = { name: '', weight: '', reps: '' }) {
       const card = document.createElement('div');
       card.className = 'exercise-card';
 
       card.innerHTML = `
         <div class="card-header">
-          <input type="text" class="exercise-name-input" value="${data.name}" placeholder="Exercise Name" oninput="saveCurrentWorkoutState()">
+          <input type="text" class="exercise-name-input" value="${data.name || ''}" placeholder="Exercise Name" oninput="saveCurrentWorkoutState()">
           <button class="btn-delete" onclick="deleteExercise(this)">✕</button>
         </div>
         <div class="card-body">
           <div class="input-group">
-            <label>WEIGHT</label>
-            <!-- step="any" allows decimals like 11.8, 12.5, etc. -->
-            <input type="number" step="any" class="weight-input" value="${data.weight}" placeholder="0" oninput="saveCurrentWorkoutState()">
+            <label>Weight (kg/lbs)</label>
+            <input type="number" step="any" class="weight-input" value="${data.weight || ''}" placeholder="0" oninput="saveCurrentWorkoutState()">
           </div>
           <div class="input-group">
-            <label>REPS</label>
-            <!-- step="any" also added here in case of fractional reps/half reps -->
-            <input type="number" step="any" class="reps-input" value="${data.reps}" placeholder="0" oninput="saveCurrentWorkoutState()">
+            <label>Reps</label>
+            <input type="number" step="any" class="reps-input" value="${data.reps || ''}" placeholder="0" oninput="saveCurrentWorkoutState()">
           </div>
         </div>
       `;
@@ -161,23 +280,22 @@
       return card;
     }
 
-    // Add a new empty exercise without disturbing existing inputs
     function addExercise() {
       const newCard = createCardElement();
       container.appendChild(newCard);
       saveCurrentWorkoutState();
     }
 
-    // Direct DOM Deletion: Removes ONLY the clicked card and keeps all other active inputs intact
+    // Direct Deletion Fix (Leaves other inputs untouched)
     function deleteExercise(buttonElement) {
       const card = buttonElement.closest('.exercise-card');
       if (card) {
-        card.remove(); // Removes node directly from DOM
-        saveCurrentWorkoutState(); // Syncs state to localStorage
+        card.remove();
+        saveCurrentWorkoutState();
       }
     }
 
-    // Scrapes current input values directly from screen and saves to localStorage
+    // State Persistence
     function saveCurrentWorkoutState() {
       const exercises = [];
       document.querySelectorAll('.exercise-card').forEach(card => {
@@ -187,23 +305,22 @@
         exercises.push({ name, weight, reps });
       });
 
-      localStorage.setItem('gymTracker_currentWorkout', JSON.stringify(exercises));
+      localStorage.setItem(getStorageKey(), JSON.stringify(exercises));
     }
 
-    // Load initial data on page load
-    function loadSavedWorkout() {
-      const saved = localStorage.getItem('gymTracker_currentWorkout');
+    function loadWorkoutForSelectedDate() {
+      container.innerHTML = '';
+      const saved = localStorage.getItem(getStorageKey());
       if (saved) {
         const exercises = JSON.parse(saved);
         exercises.forEach(ex => container.appendChild(createCardElement(ex)));
       } else {
-        // Default card if empty
         addExercise();
       }
     }
 
-    // Initialize
-    loadSavedWorkout();
+    // Initialize App
+    loadWorkoutForSelectedDate();
   </script>
 </body>
 </html>
