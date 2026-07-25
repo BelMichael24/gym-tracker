@@ -110,7 +110,7 @@
 
     header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--card-border); padding-bottom: 12px; }
     
-    /* Interactive Refresh Logo Button */
+    /* Interactive Refresh Logo Button & Animation */
     h1 { 
       font-size: 1.6rem; 
       color: var(--accent); 
@@ -118,11 +118,21 @@
       letter-spacing: -0.5px; 
       cursor: pointer; 
       user-select: none;
+      display: inline-block;
       transition: transform 0.1s ease, opacity 0.1s ease;
     }
     h1:active { 
-      transform: scale(0.95); 
+      transform: scale(0.92); 
       opacity: 0.8; 
+    }
+    h1.refreshing {
+      animation: spinPulse 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes spinPulse {
+      0% { transform: scale(1) rotate(0deg); opacity: 1; }
+      50% { transform: scale(1.15) rotate(180deg); opacity: 0.7; }
+      100% { transform: scale(1) rotate(360deg); opacity: 1; }
     }
 
     .theme-select { 
@@ -214,7 +224,7 @@
 <body>
 
   <header>
-    <h1 onclick="refreshApp()" title="Tap to refresh app">Jacked.</h1>
+    <h1 id="appLogo" onclick="refreshApp()" title="Tap to refresh app">Jacked.</h1>
     <select class="theme-select" id="themeSelect" onchange="changeTheme(this.value)">
       <option value="purple">Neon Purple</option>
       <option value="amoled">AMOLED Cyan</option>
@@ -242,10 +252,18 @@
     let selectedCalDateStr = null;
     let editingLogId = null;
 
-    /* --- REFRESH FUNCTION --- */
+    /* --- REFRESH FUNCTION WITH VISUAL ANIMATION --- */
     function refreshApp() {
-      // Force reload page from server/network
-      window.location.reload();
+      const logo = document.getElementById('appLogo');
+      if (logo) {
+        logo.classList.remove('refreshing');
+        void logo.offsetWidth; // Force CSS reflow
+        logo.classList.add('refreshing');
+      }
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 250);
     }
 
     /* --- THEME MANAGEMENT --- */
@@ -667,6 +685,8 @@
 
       let history = JSON.parse(localStorage.getItem('ns_history') || '[]');
       
+      const wasEditing = Boolean(editingLogId);
+
       if (editingLogId) {
         const index = history.findIndex(item => item.id === editingLogId);
         if (index !== -1) history[index] = log;
@@ -678,7 +698,12 @@
       history.sort((a, b) => new Date(b.rawDate || b.date) - new Date(a.rawDate || a.date));
       localStorage.setItem('ns_history', JSON.stringify(history));
 
-      alert(editingLogId ? "Workout updated!" : "Workout saved successfully!");
+      alert(wasEditing ? "Workout updated!" : "Workout saved successfully!");
+
+      // Clear form inputs after saving
+      e.target.reset();
+
+      // Switch to progress tab
       switchTab('progress');
     }
 
