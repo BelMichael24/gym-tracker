@@ -273,8 +273,8 @@
   <header>
     <h1 id="appLogo" onclick="refreshApp()" title="Tap to refresh app">Jacked.</h1>
     <select class="theme-select" id="themeSelect" onchange="changeTheme(this.value)">
-      <option value="amber">Cyberpunk Amber</option>
-      <option value="amoled">AMOLED Cyan</option>
+      <option value="amber">Amber</option>
+      <option value="amoled">Amoled Cyan</option>
       <option value="crimson">Crimson Red</option>
       <option value="dracula">Dracula Pink</option>
       <option value="forest">Forest Green</option>
@@ -409,7 +409,6 @@
       const rowsContainer = row.parentElement;
       row.remove();
       
-      // Re-index set labels
       const rows = rowsContainer.querySelectorAll('.set-row');
       rows.forEach((r, idx) => {
         const labelInput = r.querySelector('input[type="text"]');
