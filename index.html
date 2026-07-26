@@ -7,6 +7,26 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Jacked.</title>
+
+  <!-- Custom Home Screen App Icons -->
+  <link rel="apple-touch-icon" href="PASTE_YOUR_BASE64_STRING_HERE">
+  <link rel="icon" type="image/png" href="PASTE_YOUR_BASE64_STRING_HERE">
+
+  <!-- PWA Manifest for Android / Chrome -->
+  <link rel="manifest" href='data:application/manifest+json,{
+    "name": "Jacked.",
+    "short_name": "Jacked",
+    "start_url": "./",
+    "display": "standalone",
+    "background_color": "#121212",
+    "theme_color": "#121212",
+    "icons": [{
+      "src": "PASTE_YOUR_BASE64_STRING_HERE",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }]
+  }'>
+
   <style>
     /* Theme Definitions via CSS Variables */
     :root, [data-theme="amber"] {
