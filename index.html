@@ -226,33 +226,6 @@
       background: rgba(255,255,255,0.05);
     }
 
-    /* Weight Visualizer Styles */
-    .weight-visualiser {
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      background: var(--bg);
-      border: 1px solid var(--card-border);
-      padding: 4px 8px;
-      border-radius: 8px;
-      height: 28px;
-    }
-    .plate-stack {
-      display: flex;
-      align-items: center;
-      gap: 2px;
-      height: 16px;
-    }
-    .plate {
-      width: 3px;
-      border-radius: 1px;
-      background: var(--accent);
-      transition: height 0.15s ease, background-color 0.2s ease;
-    }
-    .plate-sm { height: 8px; }
-    .plate-md { height: 12px; }
-    .plate-lg { height: 16px; background: var(--text); }
-
     .btn { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: bold; width: 100%; font-size: 0.95rem; margin-top: 8px; cursor: pointer; transition: opacity 0.15s ease; }
     .btn:active { opacity: 0.85; }
     .btn-secondary { background: var(--card); color: var(--text-dim); border: 1px solid var(--card-border); margin-top: 4px; }
@@ -462,46 +435,6 @@
       } else {
         input.value = newVal;
       }
-
-      updateCardVisualiser(btn.closest('.exercise-card-item'));
-    }
-
-    function handleWeightInput(inputElem) {
-      updateCardVisualiser(inputElem.closest('.exercise-card-item'));
-    }
-
-    function getWeightVisualiserHTML(maxWeight = 0) {
-      let platesCount = Math.min(Math.floor(maxWeight / 20), 6);
-      if (maxWeight > 0 && platesCount === 0) platesCount = 1;
-
-      let leftPlates = '';
-      let rightPlates = '';
-      for (let i = 0; i < platesCount; i++) {
-        let sizeClass = i >= 4 ? 'plate-lg' : (i >= 2 ? 'plate-md' : 'plate-sm');
-        leftPlates += `<div class="plate ${sizeClass}"></div>`;
-        rightPlates += `<div class="plate ${sizeClass}"></div>`;
-      }
-
-      return `
-        <div class="weight-visualiser" title="Max weight loaded: ${maxWeight}kg">
-          <div class="plate-stack">${leftPlates}</div>
-          <div style="width:12px; height:2px; background:var(--text-dim);"></div>
-          <div class="plate-stack">${rightPlates}</div>
-        </div>
-      `;
-    }
-
-    function updateCardVisualiser(card) {
-      if (!card) return;
-      let maxW = 0;
-      card.querySelectorAll('.weight-input').forEach(input => {
-        const val = parseFloat(input.value) || 0;
-        if (val > maxW) maxW = val;
-      });
-      const visualiserContainer = card.querySelector('.card-visualiser-slot');
-      if (visualiserContainer) {
-        visualiserContainer.innerHTML = getWeightVisualiserHTML(maxW);
-      }
     }
 
     function buildSetRowHTML(ex, setNum, valW = '', valR = '') {
@@ -510,7 +443,7 @@
           <input type="text" value="Set ${setNum}" readonly>
           <div class="stepper-input-group">
             <button type="button" class="step-btn" onclick="adjustValue(this, -2.5)">-</button>
-            <input type="number" step="any" class="weight-input" placeholder="0" value="${valW}" oninput="handleWeightInput(this)">
+            <input type="number" step="any" class="weight-input" placeholder="0" value="${valW}">
             <button type="button" class="step-btn" onclick="adjustValue(this, 2.5)">+</button>
           </div>
           <div class="stepper-input-group">
@@ -529,12 +462,10 @@
       const currentCount = rowsContainer.querySelectorAll('.set-row').length;
       const nextNum = currentCount + 1;
       rowsContainer.insertAdjacentHTML('beforeend', buildSetRowHTML(ex, nextNum));
-      updateCardVisualiser(card);
     }
 
     function removeSetRow(btnElem) {
       const row = btnElem.closest('.set-row');
-      const card = row.closest('.exercise-card-item');
       const rowsContainer = row.parentElement;
       row.remove();
       
@@ -543,19 +474,14 @@
         const labelInput = r.querySelector('input[type="text"]');
         if (labelInput) labelInput.value = `Set ${idx + 1}`;
       });
-
-      updateCardVisualiser(card);
     }
 
     function buildExerciseCardHTML(ex, setsArray = []) {
       let rowsHTML = '';
-      let maxW = 0;
 
       if (setsArray.length > 0) {
         setsArray.forEach((s, idx) => {
           rowsHTML += buildSetRowHTML(ex, idx + 1, s.weight, s.reps);
-          const w = parseFloat(s.weight) || 0;
-          if (w > maxW) maxW = w;
         });
       } else {
         rowsHTML += buildSetRowHTML(ex, 1);
@@ -563,20 +489,10 @@
         rowsHTML += buildSetRowHTML(ex, 3);
       }
 
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = rowsHTML;
-      tempDiv.querySelectorAll('.weight-input').forEach(input => {
-        const w = parseFloat(input.value) || 0;
-        if (w > maxW) maxW = w;
-      });
-
       return `
         <div class="card exercise-card-item" data-exercise-name="${ex}">
           <div class="card-title">
-            <span style="display:flex; align-items:center; gap:10px;">
-              ${ex}
-              <span class="card-visualiser-slot">${getWeightVisualiserHTML(maxW)}</span>
-            </span>
+            <span>${ex}</span>
             <button type="button" class="btn-del" onclick="removeExerciseCard(this, '${ex}')">✕</button>
           </div>
           <div style="display:grid; grid-template-columns: 1.6fr 1.5fr 1.5fr 30px; gap:6px; margin-bottom:6px; font-size:0.75rem; color:var(--text-dim); text-align:center;">
