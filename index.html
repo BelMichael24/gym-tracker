@@ -276,7 +276,7 @@
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.75);
+      background: rgba(0,0,0,0.8);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -296,8 +296,45 @@
       border-radius: 16px;
       padding: 20px;
       width: 100%;
-      max-width: 360px;
+      max-width: 380px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    /* PR Badge Styling */
+    .pr-badge {
+      display: inline-block;
+      background: var(--accent);
+      color: #000;
+      font-size: 0.65rem;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      vertical-align: middle;
+    }
+
+    .summary-stat-box {
+      background: var(--bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      flex: 1;
+    }
+    .summary-stat-val {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .summary-stat-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-top: 2px;
     }
 
     .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
@@ -369,6 +406,30 @@
 
   <div id="workoutContainer"></div>
 
+  <!-- Workout Summary Modal -->
+  <div id="summaryModal" class="modal-overlay">
+    <div class="modal-card">
+      <h3 style="color:var(--text); font-size:1.2rem; text-align:center; margin-bottom:4px;">🎉 Workout Complete!</h3>
+      <p style="font-size:0.8rem; color:var(--text-dim); text-align:center; margin-bottom:16px;" id="summaryModalDate"></p>
+
+      <div style="display:flex; gap:8px; margin-bottom:16px;">
+        <div class="summary-stat-box">
+          <div class="summary-stat-val" id="summaryTotalVol">0 kg</div>
+          <div class="summary-stat-label">Total Volume</div>
+        </div>
+        <div class="summary-stat-box">
+          <div class="summary-stat-val" id="summaryTotalSets">0</div>
+          <div class="summary-stat-label">Sets Completed</div>
+        </div>
+      </div>
+
+      <div class="settings-section-title" style="margin-bottom:6px;">Exercise Breakdown</div>
+      <div id="summaryList" style="margin-bottom:16px; border-top:1px solid var(--card-border);"></div>
+
+      <button type="button" class="btn" onclick="closeSummaryModal()">Awesome</button>
+    </div>
+  </div>
+
   <!-- Settings Modal Popup -->
   <div id="settingsModal" class="modal-overlay">
     <div class="modal-card">
@@ -435,6 +496,7 @@
     let calDate = new Date();
     let selectedCalDateStr = null;
     let editingLogId = null;
+    let lastSavedRawDate = null;
 
     function openSettingsModal() {
       document.getElementById('settingsModal').classList.add('active');
@@ -442,6 +504,62 @@
 
     function closeSettingsModal() {
       document.getElementById('settingsModal').classList.remove('active');
+    }
+
+    function openSummaryModal(logData, prExercises) {
+      lastSavedRawDate = logData.rawDate;
+      document.getElementById('summaryModalDate').innerText = logData.date;
+      
+      let totalVolume = 0;
+      let totalSets = 0;
+      let breakdownHTML = '';
+
+      logData.entries.forEach(entry => {
+        let exVol = 0;
+        const isPR = prExercises.includes(entry.exercise);
+        
+        entry.sets.forEach(s => {
+          const w = parseFloat(s.weight) || 0;
+          const r = parseFloat(s.reps) || 0;
+          exVol += (w * r);
+          totalSets++;
+        });
+
+        totalVolume += exVol;
+
+        const bestSet = entry.sets.reduce((max, s) => {
+          const w = parseFloat(s.weight) || 0;
+          return w > max ? w : max;
+        }, 0);
+
+        breakdownHTML += `
+          <div style="padding:8px 0; border-bottom:1px solid var(--card-border); font-size:0.85rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong>${entry.exercise} ${isPR ? '<span class="pr-badge">🏆 PR</span>' : ''}</strong>
+              <span style="color:var(--text-dim);">${entry.sets.length} sets</span>
+            </div>
+            <div style="color:var(--text-dim); font-size:0.75rem; margin-top:2px;">
+              Top Weight: ${bestSet} kg · Vol: ${exVol.toLocaleString()} kg
+            </div>
+          </div>
+        `;
+      });
+
+      document.getElementById('summaryTotalVol').innerText = `${totalVolume.toLocaleString()} kg`;
+      document.getElementById('summaryTotalSets').innerText = totalSets;
+      document.getElementById('summaryList').innerHTML = breakdownHTML;
+
+      document.getElementById('summaryModal').classList.add('active');
+    }
+
+    function closeSummaryModal() {
+      document.getElementById('summaryModal').classList.remove('active');
+      if (lastSavedRawDate) {
+        selectedCalDateStr = lastSavedRawDate;
+        const [y, m] = lastSavedRawDate.split('-').map(Number);
+        calDate = new Date(y, m - 1, 1);
+      }
+      switchTab('progress');
     }
 
     function exportData() {
@@ -874,7 +992,7 @@
             }
           });
           if (top1RM > 0) {
-            const dateObj = new Date(session.rawDate || session.date);
+            const dateObj = new Date(session.rawDate + 'T00:00:00');
             points.push({
               date: `${dateObj.getMonth() + 1}/${dateObj.getDate()}`,
               val: Math.round(top1RM)
@@ -975,6 +1093,47 @@
       }
     }
 
+    function checkForPRs(currentLog, existingHistory) {
+      const prExercises = [];
+
+      currentLog.entries.forEach(entry => {
+        let currentBest1RM = 0;
+
+        entry.sets.forEach(s => {
+          const w = parseFloat(s.weight) || 0;
+          const r = parseFloat(s.reps) || 0;
+          if (w > 0 && r > 0) {
+            const e1rm = w * (1 + r / 30);
+            if (e1rm > currentBest1RM) currentBest1RM = e1rm;
+          }
+        });
+
+        if (currentBest1RM === 0) return;
+
+        let previousBest1RM = 0;
+        existingHistory.forEach(session => {
+          if (session.id === currentLog.id) return;
+          const oldMatch = session.entries.find(e => e.exercise === entry.exercise);
+          if (oldMatch) {
+            oldMatch.sets.forEach(s => {
+              const w = parseFloat(s.weight) || 0;
+              const r = parseFloat(s.reps) || 0;
+              if (w > 0 && r > 0) {
+                const e1rm = w * (1 + r / 30);
+                if (e1rm > previousBest1RM) previousBest1RM = e1rm;
+              }
+            });
+          }
+        });
+
+        if (currentBest1RM > previousBest1RM) {
+          prExercises.push(entry.exercise);
+        }
+      });
+
+      return prExercises;
+    }
+
     function saveWorkout(e) {
       e.preventDefault();
       
@@ -1010,7 +1169,8 @@
       }
 
       let history = JSON.parse(localStorage.getItem('ns_history') || '[]');
-      const wasEditing = Boolean(editingLogId);
+
+      const prExercises = checkForPRs(log, history);
 
       if (editingLogId) {
         const index = history.findIndex(item => item.id === editingLogId);
@@ -1020,12 +1180,10 @@
         history.push(log);
       }
 
-      history.sort((a, b) => new Date(b.rawDate || b.date) - new Date(a.rawDate || a.date));
+      history.sort((a, b) => new Date(b.rawDate + 'T00:00:00') - new Date(a.rawDate + 'T00:00:00'));
       localStorage.setItem('ns_history', JSON.stringify(history));
 
-      alert(wasEditing ? "Workout updated!" : "Workout saved successfully!");
-
-      switchTab('progress');
+      openSummaryModal(log, prExercises);
     }
 
     function deleteHistoryItem(id) {
