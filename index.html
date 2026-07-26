@@ -183,10 +183,48 @@
     .date-picker-card label { font-size: 0.9rem; color: var(--accent); font-weight: 600; }
     .date-picker-card input[type="date"] { background: var(--bg); border: 1px solid var(--card-border); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; text-align: center; width: auto; color-scheme: dark; }
 
-    .set-row { display: grid; grid-template-columns: 2fr 1fr 1fr 30px; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .set-row { display: grid; grid-template-columns: 1.6fr 1.5fr 1.5fr 30px; gap: 6px; align-items: center; margin-bottom: 8px; }
     input, select { background: var(--bg); border: 1px solid var(--card-border); color: #fff; padding: 8px; border-radius: 8px; font-size: 0.9rem; width: 100%; text-align: center; }
     input[type="text"] { text-align: left; }
     input:focus, select:focus { border-color: var(--accent); outline: none; }
+
+    /* Stepper Input Wrappers */
+    .stepper-input-group {
+      display: flex;
+      align-items: center;
+      background: var(--bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .stepper-input-group:focus-within {
+      border-color: var(--accent);
+    }
+    .stepper-input-group input {
+      background: transparent;
+      border: none;
+      padding: 8px 2px;
+      font-size: 0.85rem;
+      width: 100%;
+    }
+    .step-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-weight: bold;
+      font-size: 0.85rem;
+      padding: 0 6px;
+      height: 100%;
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.1s ease;
+    }
+    .step-btn:hover {
+      color: var(--accent);
+    }
+    .step-btn:active {
+      background: rgba(255,255,255,0.05);
+    }
 
     .btn { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: bold; width: 100%; font-size: 0.95rem; margin-top: 8px; cursor: pointer; transition: opacity 0.15s ease; }
     .btn:active { opacity: 0.85; }
@@ -385,12 +423,34 @@
       render();
     }
 
+    function adjustValue(btn, step) {
+      const group = btn.closest('.stepper-input-group');
+      const input = group.querySelector('input');
+      let currentVal = parseFloat(input.value) || 0;
+      let newVal = currentVal + step;
+      if (newVal < 0) newVal = 0;
+      
+      if (step === 2.5 || step === -2.5 || step === 1.25 || step === -1.25) {
+        input.value = Math.round(newVal * 100) / 100;
+      } else {
+        input.value = newVal;
+      }
+    }
+
     function buildSetRowHTML(ex, setNum, valW = '', valR = '') {
       return `
         <div class="set-row" data-set-index="${setNum}">
           <input type="text" value="Set ${setNum}" readonly>
-          <input type="number" step="any" name="${ex}_w${setNum}" placeholder="0" value="${valW}">
-          <input type="number" step="any" name="${ex}_r${setNum}" placeholder="0" value="${valR}">
+          <div class="stepper-input-group">
+            <button type="button" class="step-btn" onclick="adjustValue(this, -2.5)">-</button>
+            <input type="number" step="any" class="weight-input" placeholder="0" value="${valW}">
+            <button type="button" class="step-btn" onclick="adjustValue(this, 2.5)">+</button>
+          </div>
+          <div class="stepper-input-group">
+            <button type="button" class="step-btn" onclick="adjustValue(this, -1)">-</button>
+            <input type="number" step="any" class="reps-input" placeholder="0" value="${valR}">
+            <button type="button" class="step-btn" onclick="adjustValue(this, 1)">+</button>
+          </div>
           <button type="button" class="btn-del" style="font-size:0.9rem;" onclick="removeSetRow(this)">✕</button>
         </div>
       `;
@@ -434,8 +494,8 @@
             <span>${ex}</span>
             <button type="button" class="btn-del" onclick="removeExerciseCard(this, '${ex}')">✕</button>
           </div>
-          <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 30px; gap:8px; margin-bottom:6px; font-size:0.75rem; color:var(--text-dim);">
-            <span>Set</span><span>Kg</span><span>Reps</span><span></span>
+          <div style="display:grid; grid-template-columns: 1.6fr 1.5fr 1.5fr 30px; gap:6px; margin-bottom:6px; font-size:0.75rem; color:var(--text-dim); text-align:center;">
+            <span>Set</span><span>Kg (±2.5)</span><span>Reps (±1)</span><span></span>
           </div>
           <div class="sets-rows-container">
             ${rowsHTML}
@@ -822,9 +882,10 @@
         const sets = [];
         
         card.querySelectorAll('.set-row').forEach(row => {
-          const inputs = row.querySelectorAll('input[type="number"]');
-          const w = inputs[0] ? inputs[0].value : '';
-          const r = inputs[1] ? inputs[1].value : '';
+          const weightInput = row.querySelector('.weight-input');
+          const repsInput = row.querySelector('.reps-input');
+          const w = weightInput ? weightInput.value : '';
+          const r = repsInput ? repsInput.value : '';
           if (w || r) sets.push({ weight: w || 0, reps: r || 0 });
         });
 
